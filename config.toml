@@ -1,0 +1,4 @@
+baseURL = "http://blog.pjam.me"
+languageCode = "en-us"
+title = "Pierre's blog"
+theme = "hyde-hyde"
