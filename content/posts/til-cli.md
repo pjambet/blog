@@ -1,6 +1,11 @@
 ---
 title: "Til Cli"
-date: 2020-06-17T14:26:18-04:00
+date: 2020-06-17
+lastmod: 2020-06-17T15:16:46-04:00
+tags : [ "dev" ]
+categories : [ "dev" ]
+layout: post
+highlight: false
 draft: false
 ---
 

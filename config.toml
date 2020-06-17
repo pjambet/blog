@@ -2,3 +2,50 @@ baseURL = "http://blog.pjam.me"
 languageCode = "en-us"
 title = "Pierre's blog"
 theme = "hyde-hyde"
+
+paginate = 5
+
+## Site Settings
+[params]
+  author  = "Pierre J."
+  title = "My Blog"
+  description = "This blog is about ..."
+  authorimage = "/img/hugo.png"
+  dateformat = "Jan 2, 2006"
+
+  # sidebar, copyright & license
+  copyright = "pierre j"
+  since = 2020
+  license = "CC BY-SA 4.0"
+  licenseURL = "https://creativecommons.org/licenses/by-sa/4.0"
+  showBuiltWith = true
+
+  # https://highlightjs.org
+  # highlightjs = true
+  # highlightjsstyle = "github"
+
+  # Table of contents
+  # toc = none # "hugo" #, or "tocbot"            
+
+[params.social]
+  twitter = "pierre_jambet"
+  keybase = "pierrej"
+  github = "pjambet"
+  stackoverflow = "919641"
+
+## Main Menu
+[[menu.main]]
+    name = "Posts"
+    weight = 100
+    identifier = "posts"
+    url = "/posts/"
+[[menu.main]]
+    name = "Portfolio"
+    identifier = "portfolio"
+    weight = 200
+    url = "/portfolio/"
+[[menu.main]]
+    name = "About"
+    identifier = "about"
+    weight = 300
+    url = "/about/"
