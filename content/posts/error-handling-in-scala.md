@@ -52,7 +52,7 @@ val route =
   }
 ```
 
-```scala
+{{< highlight scala >}}
 object PurchaseService {
 
   final case class Order(orderId: String)
@@ -64,7 +64,7 @@ object PurchaseService {
     }
   }
 }
-```
+{{< / highlight >}}
 
 ```scala
 object PaymentClient {
