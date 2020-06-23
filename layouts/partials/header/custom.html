@@ -1,2 +1,5 @@
+<!-- Analytics -->
+{{- if (in (slice (getenv "HUGO_ENV") hugo.Environment) "production") -}}
 <script data-goatcounter="https://pjam.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
+{{- end -}}
