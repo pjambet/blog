@@ -8,6 +8,7 @@ description: "How to upload file directly to amazon s3 using jQuery"
 layout: post
 highlight: false
 draft: false
+summary: "Using CORS with AWS to upload files directly to S3 from a webpage using a Ruby on Rails server."
 ---
 
 ##### Originally published at [https://pjambet.github.io/](https://pjambet.github.io/blog/direct-upload-to-s3)

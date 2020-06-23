@@ -4,6 +4,7 @@ date: 2013-08-17T15:07:47-04:00
 lastmod: 2020-06-17T15:07:47-04:00
 tags : [ "dev", "sql", "mysql" ]
 categories : [ "dev" ]
+summary: "The limitation of MySQL's default utf8 encoding and how to use a better one"
 layout: post
 highlight: false
 draft: false
@@ -15,7 +16,11 @@ description: "MySQL UTF8 support for emojis"
 **tl;dr; MySQL regular UTF8 encoding sucks, you should use UTF8mb4 (or even
 better, Postgres !)**
 
-## Intro
+# Intro
+
+{{% details "This is the details title (click to expand)" %}}
+This is the content (hidden until clicked).
+{{% /details %}}
 
 In the past few months I had to struggle with MySQL and its crappy UTF8 support,
 so I thought I would sum up my findings here.

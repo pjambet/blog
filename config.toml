@@ -10,6 +10,7 @@ pygmentsCodeFences = true
 pygmentsCodefencesGuessSyntax = true
 pygmentsUseClassic = false
 #pygmentOptions = "linenos=inline"
+summaryLength = 20
 
 [Params]
 #  homeTitle = "Beautiful Hugo Theme" # Set a different text for the header on the home page
