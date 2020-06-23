@@ -6,7 +6,7 @@ tags : [ "dev" ]
 categories : [ "dev" ]
 layout: post
 highlight: false
-draft: false
+draft: true
 ---
 
 # WIP
