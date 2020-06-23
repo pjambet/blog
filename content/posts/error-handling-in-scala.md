@@ -10,7 +10,7 @@ draft: false
 description: "After a few years of using Scala to develop backend services at Harry’s, we developed a robust approach to error handling, leveraging its powerful type system. It takes advantage of the flexibility of Scala types and tries to avoid defensive programming such as aggressive exception catching and re-throwing."
 ---
 
-##### Previously published on [Medium](https://medium.com/@pierre_jambet/error-handling-in-scala-1197a742d6a5
+##### Previously published on [Medium](https://medium.com/@pierre_jambet/error-handling-in-scala-1197a742d6a5)
 
 After a few years of using Scala to develop backend services at Harry’s, we developed a robust approach to error handling, leveraging its powerful type system. It takes advantage of the flexibility of Scala types and tries to avoid defensive programming such as aggressive exception catching and re-throwing.
 
@@ -214,10 +214,10 @@ val route =
           case Success(Right(result)) =>
             complete(StatusCodes.Created, result)
           case Success(Left(error)) =>
-            val jsonError = 
+            val jsonError =
               "{\"error\": \"" + error.reason + "\"}"
             complete(StatusCodes.PaymentRequired,
-                     HttpEntity(ContentTypes.`application/json`, 
+                     HttpEntity(ContentTypes.`application/json`,
                                 jsonError))
           case Failure(exception) =>
             // This is where exceptions would ideally be sent
@@ -225,7 +225,7 @@ val route =
             system.log.error(exception, "Unexpected error")
             complete(
                 StatusCodes.InternalServerError,
-                HttpEntity(ContentTypes.`application/json`, 
+                HttpEntity(ContentTypes.`application/json`,
                   "{\"error\": \"Something went wrong.\"}"))
         }
       }
@@ -314,4 +314,4 @@ We actually only use a small subset of the Stripe API endpoints: [Payment Intent
 
 Big thanks to [Brian Cobb](https://medium.com/u/b2c2765e632d) and [Ilya Rubnich](https://medium.com/u/a40221c8b9a6) for reviewing an early draft of this post.
 
-Disclaimer: I am not currently employed by Harry’s, but worked on developing this approach to error handling while working there.    
+Disclaimer: I am not currently employed by Harry’s, but worked on developing this approach to error handling while working there.
