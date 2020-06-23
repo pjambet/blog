@@ -11,3 +11,5 @@ socialShare: false
 # About Me
 
 My name is ...
+
+I'm currently writing [an online book about rewriting Redis in Ruby](https://redis.pjam.me/)
