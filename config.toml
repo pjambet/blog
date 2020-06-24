@@ -4,13 +4,19 @@ DefaultContentLanguage = "en"
 title = "Pierre's Blog"
 theme = "beautifulhugo"
 metaDataFormat = "yaml"
-# pygmentsStyle = "solarized-dark"
-pygmentsUseClasses = true
-pygmentsCodeFences = true
-pygmentsCodefencesGuessSyntax = true
-pygmentsUseClassic = false
-# pygmentsOptions = "linenos=table"
 summaryLength = 20
+
+[markup]
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = true
+    hl_Lines = ""
+    lineNoStart = 1
+    lineNos = false
+    lineNumbersInTable = true
+    noClasses = true
+    style = "friendly"
+    tabWidth = 4
 
 [Params]
 #  homeTitle = "Beautiful Hugo Theme" # Set a different text for the header on the home page
