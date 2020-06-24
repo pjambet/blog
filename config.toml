@@ -9,7 +9,7 @@ pygmentsUseClasses = true
 pygmentsCodeFences = true
 pygmentsCodefencesGuessSyntax = true
 pygmentsUseClassic = false
-#pygmentOptions = "linenos=inline"
+# pygmentsOptions = "linenos=table"
 summaryLength = 20
 
 [Params]

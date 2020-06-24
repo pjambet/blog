@@ -1,0 +1,7 @@
+.highlight td:first-child pre, .highlight pre {
+    overflow: auto;
+}
+
+.highlight table td:first-child {
+    overflow: hidden;
+}
