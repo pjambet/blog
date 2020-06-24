@@ -5,3 +5,8 @@
 .highlight table td:first-child {
     overflow: hidden;
 }
+
+pre {
+    word-break: normal;
+    word-wrap: normal;
+}
