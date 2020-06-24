@@ -36,6 +36,8 @@ summaryLength = 20
   showRelatedPosts = true
 #  hideAuthor = true
 #  gcse = "012345678901234567890:abcdefghijk" # Get your code from google.com/cse. Make sure to go to "Look and Feel" and change Layout to "Full Width" and Theme to "Classic"
+  archivePaginate = 20
+  showArchiveCount = false
 
 #[[Params.bigimg]]
 #  src = "img/triangle.jpg"
@@ -98,3 +100,7 @@ summaryLength = 20
     name = "Tags"
     url = "tags"
     weight = 3
+[[menu.main]]
+    name = "Archive"
+    url = "posts"
+    weight = 4
