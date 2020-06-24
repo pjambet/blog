@@ -6,7 +6,6 @@ tags : [ "ruby", "cli", "dev" ]
 categories : [ "dev" ]
 layout: post
 highlight: false
-draft: true
 summary: "A small cli available as a ruby gem to maintain a repo of TILs"
 ---
 
