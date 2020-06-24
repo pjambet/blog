@@ -9,8 +9,8 @@ highlight: false
 summary: "A small cli available as a ruby gem to maintain a repo of TILs"
 ---
 
-**tl;dr; `til` is a wrapper that I recently published as a [ruby gem][1] around a few other
-tools to simplify the management of a TIL repo, such as <https://github.com/pjambet/til>.**
+**tl;dr; `til` is a wrapper around a few other tools to simplify the management of a TIL repo, such as
+<https://github.com/pjambet/til>. I recently published it as a [ruby gem][1].**
 
 The code can be [found on GitHub][2].
 
