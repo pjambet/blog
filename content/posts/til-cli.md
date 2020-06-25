@@ -53,7 +53,7 @@ It's worth mentioning that I could have used the [backtick][7] approach, but tha
 and also, there are few blog posts out there that recommend against using it, and favor the `system` method. In this
 case we're not really dealing with user input, so it doesn't matter that much from a security standpoint.
 
-The [`Process.spawn`][8] method accept a bunch of options, there are a bunch, but these are the ones that are
+The [`Process.spawn`][8] method accepts a bunch of options, there are a lot, but these are the ones that are
 interesting to us here:
 
 ```
@@ -62,15 +62,16 @@ interesting to us here:
 ```
 
 So, we can create a [`pipe`][12] with [`IO.pipe`][13] and pass the reader as the `:in` argument to `spawn`, so that we
-can write with the writer and the process on the other end, the one created by `system` will receive it.
+can write with the writer from the main process and the process on the other end, the one created by `spawn` will
+receive it.
 
-_Note: it is important to close the `writer` in the initial process, if you don't `fzf` still thinks that there
+_Note: it is important to close the `writer` in the initial process, if you don't, `fzf` still thinks that there
 might be more to read, and it shows it by displaying a spinner in the bottom left corner of the terminal._
-
 
 We can use the same approach to get the content that `fzf` will output. Once a selection is made, `fzf` writes it to
 [STDOUT][11]. So we create another pipe, and give the writer as the `:out` option, the process started by `spawn` will
-be able to use that and we can then use the other end of the pipe to read from it and get the selection from the user.
+be able to write to it and we can then use the other end of the pipe to read from it and get the selection from the
+user in the main process.
 
 This is what `til` does, as you can see [on GitHub][10].
 
@@ -79,7 +80,7 @@ essentially reimplementing something fairly similar to what ruby does for us wit
 
 _Note (another one): As I was writing this post, I realized that Ruby has another method related to spawning new
 processes and dealing with STDIN and STDOUT: [`IO.popen`][17]. I haven't looked too much into it yet, but it looks like
-it could simplify my code a little bit. That being said, the overall approach described above is still valid!_
+it could simplify my code a little bit. That being said, the overall approach described above is still valid._
 
 ## Using an external editor
 
@@ -90,8 +91,8 @@ and `git` opens an editor for you, by default `vim`.
 
 What is actually really cool with this is that you don't have to use `vim`, you could use pretty much any other editors,
 that being said, you probably want to pick one that is quick to start so you don't have to wait just to type a commit
-message. It's a little bit trickier with editors using a dedicated window, so not vim, but vscode, macvim for
-instance. [GitHub's documentation][14] has a page explaing how you can use the most common visual editors as git editors.
+message. It's a little bit trickier with editors using a dedicated window such as vscode or macvim. [GitHub's
+documentation][14] has a page explaing how you can use the most common visual editors as git editors.
 
 So, as a git cli enthusiast, I wanted to replicate the same worflow: you picked a category, now let's write the
 content, in the editor you like using, so you can format things the way you want.
@@ -99,7 +100,7 @@ content, in the editor you like using, so you can format things the way you want
 It turns out that it's apparently "the right approach" to first look at the `VISUAL` environment variable and then at
 `EDITOR` as explained [here][15] and [there][16].
 
-Reimplementing the git commit workflow turned out to be very little work, you first create file, Ruby makes that easy
+Reimplementing the git commit workflow turned out to be very little work, you first create a file, Ruby makes that easy
 with the [`Tempfile`][18] class, we then use either `system` or `spawn` with the value in `$EDITOR` or `$VISUAL` (we
 default to `vi`, just in case, so we have _something_).
 
@@ -119,14 +120,15 @@ new commit on GitHub. The GitHub API must have an easy way to do this right?
 
 Well?
 
-You _can_ do it! But is it easy? I'll let you answer this on your own.
+You _can_ do it! But is it easy? I'll let you answer on your own.
 
 The new commit needs to contain two changes, the new file we want to create, but also, and this is really one of the
 reasons why I wanted to create this tool in the first place, the updates to the README file, to keep the table of
-content and the links up to the date with the new file.
+content and the links up to the date with the new TIL.
 
 This [blog post][20] was really helpful but the fact that it didn't include any code examples means that I spent a few
-hours (😭) trying to gets things workings, here's a summary of what I'm doing to create a new commit.
+hours (😭) trying to get things workings, here's a summary of what I'm doing to create a new commit, I hope you're
+ready:
 
 - [Get the `ref` of the latest commit on master][21]
 - [Get the commit object, with the sha obtained in the previous step][22]
@@ -166,6 +168,9 @@ already. I have a few thoughts about what I would like to do next:
   to be any formulae/casks named `til`, so I should hurry up!
 - A chrome/firefox extension, so you can do the same without leaving your browser
 - Improve the code (if you've looked at it, it's ... far from great, really far)
+- Show a terminal spinner at the end when creating the commit, since it can take up to a few seconds. I recently learned
+  how to use terminal escape sequences to do this! Read more on my [TIL repo][34] (see what I did there?!). But there
+  are also at least two gems that do that for you, [here][35] and [there][36].
 
 Questions? Comments? Hit me up on [Twitter](https://twitter.com/pierre_jambet)!
 
@@ -220,3 +225,6 @@ mine:
 [31]: https://github.com/pjambet/til-rb/blob/cd92d528d24a24dc5ca30086c5bdf728f8a9068f/lib/til/core.rb#L163
 [32]: https://github.com/pjambet/til-rb/blob/cd92d528d24a24dc5ca30086c5bdf728f8a9068f/lib/til/core.rb#L164
 [33]: https://github.com/pjambet/til-rb/blob/cd92d528d24a24dc5ca30086c5bdf728f8a9068f/lib/til/core.rb#L157
+[34]: https://github.com/pjambet/til/blob/master/unix/2020-06-17_move-cursor-when-priting-to-terminal.md
+[35]: https://github.com/piotrmurach/tty-spinner
+[36]: https://github.com/janlelis/whirly
