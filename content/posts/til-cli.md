@@ -19,8 +19,8 @@ The code can be [found on GitHub][2].
 At first glance this small CLI might not seem like it does much, and it really doesn't, but while building it I ended
 learning quite a few things, three to be exact:
 
-- How to use an external cli, such as `fzf`, and feed it input, similar to using a unix pipe, like `echo "a\nb\nc" |
-  fzf`, as well as reading the output of the command, but programmatically, in Ruby.
+- How to use an external command line tool, such as `fzf`, and feed it input, similar to using a unix pipe, like `echo
+  "a\nb\nc" | fzf`, as well as reading the output of the command, but programmatically, in Ruby.
 - How to implement a flow similar to what happens when you type `git commit` without the `-m/--message` option and it
   prompts you with an editor, `vim` by default.
 - How to use the Gitub API to create a new commit, without using the `git` cli.
@@ -30,7 +30,7 @@ Before jumping in, here's a summary of what `til` actually does:
 - It first loads the list of all existing categories in your TIL repo, and then uses `fzf` to prompt you to pick the
   category for your new TIL. You can also choose to add a new category.
 - Once you picked a category, it uses your default editor, as configured through the `$VISUAL` or `$EDITOR` environment
-  variables, or `vi` if none of those is defined. You can then type what your actualled learned today.
+  variables, or `vi` if none of those are defined. You can then type what you actually learned today.
 - After saving and closing the text editor, `til` will grab the content of the file, and commit it to the configured
   GitHub repo
 - It also takes care of maintaining the `README.md` file so that it contains a nicely organized index of all your
@@ -150,8 +150,8 @@ hours (😭) trying to gets things workings, here's a summary of what I'm doing 
 
 You can find documentation about the API endpoints I'm using on the following pages:
 
-- https://developer.github.com/v3/git/commits/
-- http://octokit.github.io/octokit.rb/Octokit/Client/Commits.html
+- [The HTTP API Documentation](https://developer.github.com/v3/git/commits/)
+- [The octokit gem Documentation](http://octokit.github.io/octokit.rb/Octokit/Client/Commits.html)
 
 ## See it in action
 
