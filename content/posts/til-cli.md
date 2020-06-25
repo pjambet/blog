@@ -105,7 +105,7 @@ with the [`Tempfile`][18] class, we then use either `system` or `spawn` with the
 default to `vi`, just in case, so we have _something_).
 
 The main difference between `spawn` and `system` here is how they return, `system` does not return until the process is
-over, wheras `spawn` returns a pid. Since we basically want to wait for the user to close the editor, `system` is
+over, whereas `spawn` returns a pid. Since we basically want to wait for the user to close the editor, `system` is
 easier, with `spawn` we would have had to use `waitpid` to wait.
 
 Once the child process is done, we can read the content of the file, and VOILA! We have the content, formatted by the
