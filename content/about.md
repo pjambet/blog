@@ -12,6 +12,8 @@ socialShare: false
 
 Hey there! My name is Pierre, I also write about running, at https://pacing.pjam.me/
 
+In case you're interested, [here is my resume](http://www.pjam.me/resume)
+
 ## Projects
 
 - [til-rb](https://github.com/pjambet/til-rb/), a ruby gem to help manage a repo of [TILs](https://github.com/pjambet/til/)
