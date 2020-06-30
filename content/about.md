@@ -10,6 +10,9 @@ socialShare: false
 
 # About Me
 
-My name is ...
+Hey there! My name is Pierre, I also write about running, at https://pacing.pjam.me/
 
-I'm currently writing [an online book about rewriting Redis in Ruby](https://redis.pjam.me/)
+## Projects
+
+- [til-rb](https://github.com/pjambet/til-rb/), a ruby gem to help manage a repo of [TILs](https://github.com/pjambet/til/)
+- I'm currently writing [an online book about rewriting Redis in Ruby](https://redis.pjam.me/)
