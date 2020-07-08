@@ -58,7 +58,13 @@ psql2> UPDATE test SET x = x + 1 WHERE id = 1;
 
 DEADLOCK! Each session is waiting for the other one to commit or rollback:
 
-ERROR: deadlock detected DETAIL: Process 14803 waits for ShareLock on transaction 43356; blocked by process 14431. Process 14431 waits for ShareLock on transaction 43357; blocked by process 14803. HINT: See server log for query details. CONTEXT: while updating tuple (0,1) in relation "test"
+```
+ERROR: deadlock detected DETAIL: Process 14803 waits for ShareLock on transaction 43356;
+blocked by process 14431.
+Process 14431 waits for ShareLock on transaction 43357; blocked by process 14803.
+HINT: See server log for query details. CONTEXT: while updating tuple (0,1) in relation "test"
+```
+
 
 PostgreSQL automatically detects the situation after a few seconds and will automatically roll back one of the transactions, allowing the other one to commit successfully.
 
