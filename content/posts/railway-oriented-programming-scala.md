@@ -344,33 +344,33 @@ The second version offered in the deck is:
 
 ``` scala
 def map[A, B](singleTrackFunction: A => B): TwoTrack[A] => TwoTrack[B] =
-  bind(singleTrackFunction.andThen(Success.apply))
+  bind(singleTrackFunction.andThen(succeed))
 ```
 
 Woof, that escalated quickly. I feel like I need to stop and look closer because at first glance, it makes no sense to me. Let's start with the inner part, what is given to `bind`:
 
 ``` scala
-singleTrackFunction.andThen(Success.apply)
+singleTrackFunction.andThen(succeed)
 ```
 
-It creates a new function, this function will first call `singleTrackFunction`, with an `A`, and then pass the result to `Success.apply`, which creates a new instance of `Success[A]`, we can see that in a repl, where I first define an arbitrary `singleTrackFunction`:
+It creates a new function, this function will first call `singleTrackFunction`, with an `A`, and then pass the result to `succeed`, which creates a new instance of `Success[A]`, we can see that in a repl, where I first define an arbitrary `singleTrackFunction`:
 
 ``` scala
 scala> val singleTrackFunction: String => Int = str => str.length
 val singleTrackFunction: String => Int = $Lambda$1175/0x0000000801160040@65bd19bf
 
-scala> singleTrackFunction.andThen(Success.apply)
+scala> singleTrackFunction.andThen(succeed)
 val res0: String => Success[Int] = scala.Function1$$Lambda$1192/0x000000080116a040@322b09da
 ```
 
-In this example, `singleTrackFunction` is a function that takes a `String` and returns its length, a function that goes from `String` to `Int`. The result of `singleTrackFunction.andThen(Success.apply)` is another function, that goes from `String` to `Success[Int]`, we can call with with any `String`:
+In this example, `singleTrackFunction` is a function that takes a `String` and returns its length, a function that goes from `String` to `Int`. The result of `singleTrackFunction.andThen(succeed)` is another function, that goes from `String` to `Success[Int]`, we can call with with any `String`:
 
 ``` scala
 scala> res0("aString")
 val res1: Success[Int] = Success(7)
 ```
 
-`res0` has a signature that matches the `switchFunction` argument of `bind`, so when we pass `singleTrackFunction.andThen(Success.apply)` to `bind`, we receive a `TwoTrack[String] => TwoTrack[Int]` function back.
+`res0` has a signature that matches the `switchFunction` argument of `bind`, so when we pass `singleTrackFunction.andThen(succeed)` to `bind`, we receive a `TwoTrack[String] => TwoTrack[Int]` function back.
 
 With `map`, we can transform `canonicalizeEmail` into a function that can be chained after `validateRequest`, we can now write
 
