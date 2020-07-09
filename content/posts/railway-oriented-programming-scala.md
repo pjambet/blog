@@ -7,7 +7,7 @@ categories : [ "dev" ]
 layout: post
 highlight: false
 draft: false
-summary: Playing with the Railway Oriented Programming concepts in scala. Translating them from F# and seeing how we can adapt them to the Scala constructs. We will not mention Monads. I just did, but that was the only time.
+summary: Playing with the Railway Oriented Programming concepts in scala. Translating them from F# and seeing how we can adapt them to Scala constructs. We will not mention Monads. I just did, but that was the only time.
 ---
 
 ## Intro
