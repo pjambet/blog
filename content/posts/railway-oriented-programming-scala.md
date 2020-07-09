@@ -528,7 +528,9 @@ You may have noticed that we did not include `sendEmail` in the railway. I don't
 
 ### Didn't we basically re-implement Either
 
-Yes, kinda! And this is mentioned [on the ROP page as well](https://fsharpforfunandprofit.com/rop/#relationship-to-the-either-monad-and-kleisli-composition) (with a mention of Haskell, not Scala, sorry folks).
+Yes, kinda! And this is mentioned [on the ROP page as well](https://fsharpforfunandprofit.com/rop/#relationship-to-the-either-monad-and-kleisli-composition) (with a mention of Haskell, not Scala, sorry folks). The Scala [cats](https://typelevel.org/cats/) library provides [a Kleisli class](https://typelevel.org/cats/datatypes/kleisli.html), which is conceptually extremely similar to the ROP approach.
+
+EDIT: Thanks to [paul_f_snively](https://www.reddit.com/user/paul_f_snively/) on [/r/scala](https://www.reddit.com/r/scala/comments/ho33fy/railway_oriented_programming_in_scala/) for pointing me to the Kleisli class.
 
 So, did we need to do this? Maybe, I don't know, I for one learned a lot working through this translation exercise.
 
