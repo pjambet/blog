@@ -501,9 +501,11 @@ val railway = (validateRequest _)
   .andThen(bind(updateDBStep))
   .andThen(log)
 
-railway(Success(Request(name = "Pierre", email = "hello@pjam.me")))
+val request = Request(name = "Pierre", email = "hello@pjam.me")
+
+railway(succeed(request))
 // or explicitly calling .apply
-railway.apply(succeed(Request(name = "Pierre", email = "hello@pjam.me")))
+railway.apply(succeed(request))
 ```
 
 I didn't love that we had to create a success like that, so I added `succeed` at the beginning of the pipeline instead:
@@ -515,9 +517,11 @@ val railway = (succeed[Request] _)
   .andThen(bind(updateDBStep))
   .andThen(log)
 
-railway(Request(name = "Pierre", email = "hello@pjam.me"))
+val request = Request(name = "Pierre", email = "hello@pjam.me")
+
+railway(request)
 // or explicitly calling .apply
-railway.apply(Request(name = "Pierre", email = "hello@pjam.me"))
+railway.apply(request)
 ```
 
 You may have noticed that we did not include `sendEmail` in the railway. I don't think it adds much to what we already have, and we've already written a lot of code so far, I didn't want to add anything unnecessary. It's also worth mentioning that my post was based on two sources, the slide deck and the blog post, and only the deck includes the `sendEmail` piece.
