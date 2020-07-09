@@ -527,6 +527,98 @@ Yes, kinda! And this is mentioned [on the ROP page as well](https://fsharpforfun
 
 So, did we need to do this? Maybe, I don't know, I for one learned a lot working through this translation exercise.
 
+As a quick exercise, I wrote a similar version, using Scala's built-in `Either`:
+
+``` scala
+import scala.util.{Failure, Success, Try}
+
+object RailwayEither {
+
+  type TwoTrack[S] = Either[String, S]
+
+  def failure[S](message: String) = Left(message)
+
+  def succeed[S](x: S) = Right(x)
+
+  def tryCatch[A](fn: A => Unit)(x: A): Either[String, A] = {
+    Try(fn(x)) match {
+      case Failure(exception) => Left(exception.getMessage)
+      case Success(_) => Right(x)
+    }
+  }
+
+  case class Request(name: String, email: String)
+
+  def nameNotBlank(request: Request): TwoTrack[Request] =
+    if (request.name == "") {
+      failure("Name must not be blank")
+    } else {
+      succeed(request)
+    }
+
+
+  def name50(request: Request): TwoTrack[Request] =
+    if (request.name.length > 50) {
+      failure("Name must not be longer than 50 chars")
+    } else {
+      succeed(request)
+    }
+
+
+  def emailNotBlank(request: Request): TwoTrack[Request] =
+    if (request.email == "") {
+      failure("Email must not be blank")
+    } else {
+      succeed(request)
+    }
+
+
+  def validateRequest(twoTrackInput: TwoTrack[Request]): TwoTrack[Request] = {
+    for {
+      r <- twoTrackInput
+      r <- nameNotBlank(r)
+      r <- name50(r)
+      r <- emailNotBlank(r)
+    } yield r
+  }
+
+  def updateDB(request: Request): Unit = {
+    //    throw new RuntimeException("Fake DB Error")
+    ()
+  }
+
+  def canonicalizeEmail(request: Request): Request = {
+    request.copy(email = request.email.trim().toLowerCase())
+  }
+
+  def logSuccess[A](x: A): TwoTrack[A] = {
+    println(s"DEBUG. Success so far: $x");
+    succeed(x)
+  }
+
+  def logFailure[A](x: String): TwoTrack[A] = {
+    println(s"ERROR. $x");
+    failure(x)
+  }
+
+  def main(args: Array[String]): Unit = {
+
+    val request = Request(name = "Pierre", email = "pierre@pjam.me")
+
+    val updateDBStep: Request => TwoTrack[Request] = tryCatch(updateDB)
+
+    val railway = validateRequest(succeed(request))
+      .flatMap((canonicalizeEmail _).andThen(Right.apply))
+      .flatMap(updateDBStep)
+      .fold(logFailure, logSuccess)
+
+    println(railway)
+  }
+}
+```
+
+It is _a_ solution, and I'm sure we could do better, but it was an attempt to highlight how we could replicate something similar with the standard library. Feedback welcome!
+
 What comes next? Not sure, there are a bunch of things I could try to play with, like the parallel error handling thing, not to be confused with parallel in the async sense. Parallel in this context means applying all the validations independently of each other, instead of doing it sequentially. Validating a request with an empty name and empty email will only return the first error with this implementation. It would be nice if it returns two, one for the email error, one for the name error.
 
 All the code in this article is available [in this Gist](https://gist.github.com/pjambet/6d5aa587b29f9c4635bb7ed7796cb0b9)
