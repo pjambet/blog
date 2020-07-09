@@ -20,7 +20,7 @@ summaryLength = 20
 
 [Params]
 #  homeTitle = "Beautiful Hugo Theme" # Set a different text for the header on the home page
-  subtitle = "My blog, about tech stuff."
+  subtitle = "My blog, about tech stuff.<br>I am writing a book about rewriting Redis, in Ruby, <a href=\"https://redis.pjam.me\">check it out!</a>."
   mainSections = ["post","posts"]
   logo = "img/avatar-icon.png" # Expecting square dimensions
   favicon = "img/favicon.ico"

@@ -10,3 +10,8 @@ pre {
     word-break: normal;
     word-wrap: normal;
 }
+
+.intro-header .page-heading .page-subheading {
+  font-size: 20px;
+  line-height: 1.4em;
+}
