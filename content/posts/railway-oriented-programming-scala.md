@@ -10,6 +10,8 @@ draft: false
 summary: Playing with the Railway Oriented Programming concepts in scala. Translating them from F# and seeing how we can adapt them to Scala constructs. We will not mention Monads. I just did, but that was the only time.
 ---
 
+![Train tracks](/images/rop-scala.jpg)
+
 ## Intro
 
 A few years ago, a coworker introduced me to [Railway Oriented Programming (ROP)][rop-main-link]. At the time we were using Ruby, and while the ideas in ROP made a ton of sense, I didn't really find a way to apply them to what I was working on. The lack of types made it pretty hard to go beyond "I just read a blog post and I'm gonna pollute our codebase with it, because I can" and _actually_ improve things. We all pretty much moved on.
