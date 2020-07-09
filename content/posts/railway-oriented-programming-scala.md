@@ -42,9 +42,9 @@ As much as Scala gets shit for being hard to read, very often well deserved, I f
 
 ``` scala
 def validateInput(input: Request): Result[Request, String] = {
-  if (input.name == "") failure("Name must not be blank")
-  else if (input.email == "") failure("Email must not be blank")
-  else success(input) // happy path
+  if (input.name == "") Failure("Name must not be blank")
+  else if (input.email == "") Failure("Email must not be blank")
+  else Success(input) // happy path
 }
 ```
 
@@ -253,6 +253,13 @@ case class Success[S](data: S) extends TwoTrackResult[S]
 case class Failure[S](message: String) extends TwoTrackResult[S]
 ```
 
+Let's also add the two helper functions `succeed` and `failure`:
+
+``` scala
+def succeed[S](x: S) = Success(x)
+def fail[S](message: String) = Failure[S](message)
+```
+
 ### Validation
 
 The validation is done in three steps, `nameNotBlank`, `name50` (checks that the name is not longer than fifty characters) and `emailNotBlank`. Using the types we just defined:
@@ -260,23 +267,23 @@ The validation is done in three steps, `nameNotBlank`, `name50` (checks that the
 ``` scala
 def nameNotBlank(request: Request): TwoTrack[Request] =
   if (request.name == "") {
-    Failure("Name must not be blank")
+    fail("Name must not be blank")
   } else {
-    Success(request)
+    succeed(request)
   }
 
 def name50(request: Request): TwoTrack[Request] =
   if (request.name.length > 50) {
-    Failure("Name must not be longer than 50 chars")
+    fail("Name must not be longer than 50 chars")
   } else {
-    Success(request)
+    succeed(request)
   }
 
 def emailNotBlank(request: Request): TwoTrack[Request] =
   if (request.email == "") {
-    Failure("Email must not be blank")
+    fail("Email must not be blank")
   } else {
-    Success(request)
+    succeed(request)
   }
 ```
 
@@ -286,7 +293,7 @@ In order to define `validateRequest`, we need to define `bind` (slides 92-96)
 def bind[A, B](switchFunction: A => TwoTrack[B])(twoTrackInput: TwoTrack[A]): TwoTrack[B] =
   twoTrackInput match {
     case Success(s) => switchFunction(s)
-    case Failure(f) => Failure(f)
+    case Failure(f) => fail(f)
   }
 ```
 
@@ -323,8 +330,8 @@ We now need to define `map` to transform `canonicalizeEmail`, the deck shows two
 ``` scala
 def map[A, B](singleTrackFunction: A => B): TwoTrack[A] => TwoTrack[B] = { twoTrackInput: TwoTrack[A] =>
   twoTrackInput match {
-    case Success(s) => Success(singleTrackFunction(s))
-    case Failure(f) => Failure(f)
+    case Success(s) => succeed(singleTrackFunction(s))
+    case Failure(f) => fail(f)
   }
 }
 ```
@@ -414,10 +421,10 @@ and translating it to:
 
 ``` scala
 def tryCatch[A, B](f: A => B)(exnHandler: Throwable => String)(x: A): TwoTrack[B] = try {
-  Success(f(x))
+  succeed(f(x))
 } catch {
   case ex: Throwable =>
-    Failure(exnHandler(ex))
+    fail(exnHandler(ex))
 }
 ```
 
@@ -451,8 +458,8 @@ which gives us the following once translated:
 def doubleMap[A, B](successFunc: A => B)
                    (failureFunc: String => String)
                    (twoTrackInput: TwoTrack[A]): TwoTrack[B] = twoTrackInput match {
-  case Success(s) => Success(successFunc(s))
-  case Failure(f) => Failure(failureFunc(f))
+  case Success(s) => succeed(successFunc(s))
+  case Failure(f) => fail(failureFunc(f))
 }
 ```
 
@@ -496,19 +503,13 @@ val railway = (validateRequest _)
 
 railway(Success(Request(name = "Pierre", email = "hello@pjam.me")))
 // or explicitly calling .apply
-railway.apply(Success(Request(name = "Pierre", email = "hello@pjam.me")))
+railway.apply(succeed(Request(name = "Pierre", email = "hello@pjam.me")))
 ```
 
-I didn't love that we had to create a success like that, so I added a new function, `unit`:
+I didn't love that we had to create a success like that, so I added `succeed` at the beginning of the pipeline instead:
 
 ``` scala
-def unit[A]: A => TwoTrack[A] = Success.apply
-```
-
-which we can use as follows
-
-``` scala
-val railway = unit[Request]
+val railway = (succeed[Request] _)
   .andThen(validateRequest)
   .andThen(map(canonicalizeEmail))
   .andThen(bind(updateDBStep))
@@ -519,7 +520,7 @@ railway(Request(name = "Pierre", email = "hello@pjam.me"))
 railway.apply(Request(name = "Pierre", email = "hello@pjam.me"))
 ```
 
-You may have noticed that we did not include `sendEmail` in the railway. I don't think it adds much to what we already have, and we've already written a lot of code so far, I didn't want to add anything unnecessary. It's also worth mentioning that my post was based on two sources, the slide deck and the blog post, and only the deck includes
+You may have noticed that we did not include `sendEmail` in the railway. I don't think it adds much to what we already have, and we've already written a lot of code so far, I didn't want to add anything unnecessary. It's also worth mentioning that my post was based on two sources, the slide deck and the blog post, and only the deck includes the `sendEmail` piece.
 
 ### Didn't we basically re-implement Either
 
@@ -536,7 +537,7 @@ object RailwayEither {
 
   type TwoTrack[S] = Either[String, S]
 
-  def failure[S](message: String) = Left(message)
+  def fail[S](message: String) = Left(message)
 
   def succeed[S](x: S) = Right(x)
 
@@ -554,7 +555,7 @@ object RailwayEither {
 
   def nameNotBlank(request: Request): TwoTrack[Request] =
     if (request.name == "") {
-      failure("Name must not be blank")
+      fail("Name must not be blank")
     } else {
       succeed(request)
     }
@@ -562,7 +563,7 @@ object RailwayEither {
 
   def name50(request: Request): TwoTrack[Request] =
     if (request.name.length > 50) {
-      failure("Name must not be longer than 50 chars")
+      fail("Name must not be longer than 50 chars")
     } else {
       succeed(request)
     }
@@ -570,7 +571,7 @@ object RailwayEither {
 
   def emailNotBlank(request: Request): TwoTrack[Request] =
     if (request.email == "") {
-      failure("Email must not be blank")
+      fail("Email must not be blank")
     } else {
       succeed(request)
     }
@@ -601,7 +602,7 @@ object RailwayEither {
 
   def logFailure[A](x: String): TwoTrack[A] = {
     println(s"ERROR. $x");
-    failure(x)
+    fail(x)
   }
 
   def main(args: Array[String]): Unit = {
