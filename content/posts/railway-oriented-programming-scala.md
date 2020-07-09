@@ -527,7 +527,7 @@ Yes, kinda! And this is mentioned [on the ROP page as well](https://fsharpforfun
 
 So, did we need to do this? Maybe, I don't know, I for one learned a lot working through this translation exercise.
 
-As a quick exercise, I wrote a similar version, using Scala's built-in `Either`:
+I wanted to see what an `Either` based version would look like, this is what I ended up with:
 
 ``` scala
 import scala.util.{Failure, Success, Try}
@@ -617,7 +617,7 @@ object RailwayEither {
 }
 ```
 
-It is _a_ solution, and I'm sure we could do better, but it was an attempt to highlight how we could replicate something similar with the standard library. Feedback welcome!
+It is _a_ solution, and I'm sure we could do better, but it was an attempt to highlight how we could replicate something similar with the standard library. Feedback welcome! I'm on Twitter, [@pierre_jambet](https://twitter.com/pierre_jambet)
 
 What comes next? Not sure, there are a bunch of things I could try to play with, like the parallel error handling thing, not to be confused with parallel in the async sense. Parallel in this context means applying all the validations independently of each other, instead of doing it sequentially. Validating a request with an empty name and empty email will only return the first error with this implementation. It would be nice if it returns two, one for the email error, one for the name error.
 
