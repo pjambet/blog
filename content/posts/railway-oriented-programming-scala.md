@@ -538,6 +538,9 @@ object RailwayEither {
 
   def succeed[S](x: S) = Right(x)
 
+  def switch[A, B](fn: A => B): A => TwoTrack[B] =
+    fn.andThen(Right.apply)
+
   def tryCatch[A](fn: A => Unit)(x: A): Either[String, A] = {
     Try(fn(x)) match {
       case Failure(exception) => Left(exception.getMessage)
@@ -606,7 +609,7 @@ object RailwayEither {
     val updateDBStep: Request => TwoTrack[Request] = tryCatch(updateDB)
 
     val railway = validateRequest(succeed(request))
-      .flatMap((canonicalizeEmail _).andThen(Right.apply))
+      .flatMap(switch(canonicalizeEmail))
       .flatMap(updateDBStep)
       .fold(logFailure, logSuccess)
 
