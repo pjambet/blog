@@ -12,9 +12,7 @@ summary: Playing with the Railway Oriented Programming concepts in scala. Transl
 
 ## Intro
 
-A few years ago, a coworker that I came to despise for his abhorrent views on pretty much everything in life, let's call him Joseph, introduced me to [Railway Oriented Programming (ROP)][rop-main-link], I think he saw it on Hacker News or something.
-
-At the time we were using Ruby, and while the ideas in ROP made a ton of sense, I didn't really find a way to apply them to what I was working on. The lack of types made it pretty hard to go beyond "I just read a blog post and I'm gonna pollute our codebase with it, because I can" and _actually_ improve things. Meanwhile Joseph got excited by other shiny blog posts and we all moved on.
+A few years ago, a coworker introduced me to [Railway Oriented Programming (ROP)][rop-main-link]. At the time we were using Ruby, and while the ideas in ROP made a ton of sense, I didn't really find a way to apply them to what I was working on. The lack of types made it pretty hard to go beyond "I just read a blog post and I'm gonna pollute our codebase with it, because I can" and _actually_ improve things. We all pretty much moved on.
 
 Later on, I switched to a different project, using Scala, and ended up using the `Either` type a lot, to organize what we described at the time as a "pipeline of operations", or maybe, something that one could describe as a ... "railway"?!
 
