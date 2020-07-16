@@ -633,6 +633,8 @@ What comes next? Not sure, there are a bunch of things I could try to play with,
 
 All the code in this article is available [in this Gist](https://gist.github.com/pjambet/6d5aa587b29f9c4635bb7ed7796cb0b9)
 
+In the [following post](/posts/railway-oriented-programming-scala-parallel/) we explore parallel validation. See you there!
+
 
 Sources:
 
