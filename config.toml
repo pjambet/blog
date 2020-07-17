@@ -1,7 +1,7 @@
 baseurl = "https://blog.pjam.me"
 DefaultContentLanguage = "en"
 #DefaultContentLanguage = "ja"
-title = "Pierre's Blog"
+title = "Occasionally consistent"
 theme = "beautifulhugo"
 metaDataFormat = "yaml"
 summaryLength = 20
