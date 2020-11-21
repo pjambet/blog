@@ -89,6 +89,13 @@ irb(main):002:0> proc { |*a| p a }.parameters
 => [[:rest, :a]]
 ```
 
+We can get close to the `to_proc` result with the following, but there's not much we can do with a nameless parameter, sometimes called "naked parameter". This _can_ be useful with methods, as calling `super` will forward all the arguments to the parent method, but there's no parent method with a block!
+
+``` ruby
+irb(main):001:0> proc { |*| }.parameters
+=> [[:rest]]
+```
+
 Back to the result of `Symbol#to_proc`, we get exceptions back with no arguments, or more than one:
 
 ``` ruby
