@@ -6,7 +6,7 @@ tags : [ "dev", "ruby" ]
 categories : [ "dev" ]
 layout: post
 highlight: false
-draft: true
+draft: false
 summary: What does the "ampersand, symbol" as an argument to a ruby method actually do? It creates a proc.
 ---
 
