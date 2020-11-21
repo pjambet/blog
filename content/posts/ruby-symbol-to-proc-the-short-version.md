@@ -134,7 +134,12 @@ irb(main):004:0> [ 5, 3, 1, 2, 4 ].sort(&:<=>)
 => [1, 2, 3, 4, 5]
 ```
 
-The method `<=>` was called with two arguments, the two array elements it needs to compare.
+The method `<=>` was called with two arguments, the two array elements it needs to compare, it is very close to the following more explicit approach:
+
+``` ruby
+irb(main):004:0> [ 5, 3, 1, 2, 4 ].sort { |a, b| a.<=>(b) }
+=> [1, 2, 3, 4, 5]
+```
 
 ### We can pass almost anything after the ampersand
 
