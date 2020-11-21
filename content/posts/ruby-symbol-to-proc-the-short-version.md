@@ -178,7 +178,6 @@ Thank you to [Étienne Barrié][twitter-etienne-barre] for pointing me to the fo
 - Rubinius: https://github.com/rubinius/rubinius/blob/v5.0/core/symbol.rb#L149-L152
 - Rails 2.3:18: https://github.com/rails/rails/blob/v2.3.18/activesupport/lib/active_support/core_ext/symbol.rb
 
-Found this interesting? You'll enjoy my [free online book][rebuilding-redis-in-ruby] about rebuilding Redis, in Ruby.
 
 ## Conclusion
 
@@ -198,6 +197,12 @@ rb_sym_to_proc(VALUE sym)
 If you think it's weird, that's because it is!
 
 In a next article, we'll look at how exactly Ruby handles block arguments when converting a symbol to a proc, we'll explore MRI's source code, in C, and peek at the grammar definition of the Ruby language. It's gonna be fun!
+
+---
+
+Found this interesting? You'll enjoy my [free online book][rebuilding-redis-in-ruby] about rebuilding Redis, in Ruby.
+
+---
 
 ## Appendix, Arguments vs Parameters
 
