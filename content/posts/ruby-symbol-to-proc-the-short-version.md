@@ -186,7 +186,7 @@ Thank you to [Étienne Barrié][twitter-etienne-barre] for pointing me to the fo
 
 ## Conclusion
 
-A block created through `Symbol#to_proc` requires _at least_ one argument, the receiver of the method, and the remaining arguments must match the arity of the method identified by the symbol itself. 
+A block created through `Symbol#to_proc` requires _at least_ one argument, the receiver of the method, and the remaining arguments must match the arity of the method identified by the symbol itself.
 
 `even?` is parameter-less, `&:even?.to_proc` _must_ be called with one argument only, the receiver. `<=>` has an arity of one, `:<=>?.to_proc` _must_ be called with two arguments, the receiver, and the one and only argument to `<=>`.
 
@@ -213,7 +213,7 @@ Found this interesting? You'll enjoy my [free online book][rebuilding-redis-in-r
 
 As of recently I used to use the terms "arguments" and "parameters" interchangeably, and I was wrong.
 
-Parameters are the variables that you can use from withing a function/method/block, in the following example, `a` and `b` are parameters:
+Parameters are the variables that you can use from within a function/method/block, in the following example, `a` and `b` are parameters:
 
 ``` ruby
 def a_method(a, b)
