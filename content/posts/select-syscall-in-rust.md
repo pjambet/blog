@@ -10,6 +10,8 @@ draft: false
 summary: "Using the select syscall from Rust, with the libc crate"
 ---
 
+EDIT: Thanks to [@steveklabnik](https://twitter.com/steveklabnik) for pointing out [on Reddit](https://www.reddit.com/r/rust/comments/jzmxaq/using_the_select_syscall_from_rust_with_libc/) that I was initially doing it wrong with the uninit thingy, that was changed in [this commit](https://github.com/pjambet/rust-and-select/commit/a5934b201df9d77a8700efaf40dbc8899942ba9b)
+
 ## Disclaimer
 
 1. I am _not_ a Rust expert, I am just getting started, so please take everything you read here with a grain of salt.
