@@ -209,7 +209,7 @@ Found this interesting? You'll enjoy my [free online book][rebuilding-redis-in-r
 
 ---
 
-EDIT: Thanks to [/u/zverok_kha](https://www.reddit.com/user/zverok_kha/) on Reddit's [/r/ruby](https://www.reddit.com/r/ruby/comments/jysuec/ruby_symbol_to_proc_explained_the_short_version/) for pointing out that the behavior of `#arity` and `#parameters` [was changed in 3.0.0](https://bugs.ruby-lang.org/issues/16260):
+EDIT: Thanks to [/u/zverok_kha](https://www.reddit.com/user/zverok_kha/) on Reddit's [/r/ruby](https://www.reddit.com/r/ruby/comments/jysuec/ruby_symbol_to_proc_explained_the_short_version/) for pointing out that the behavior of `#arity` and `#parameters` [were changed in 3.0.0](https://bugs.ruby-lang.org/issues/16260):
 
 ``` ruby
 > RUBY_VERSION
