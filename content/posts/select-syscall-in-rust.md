@@ -85,6 +85,7 @@ fn to_fdset_ptr(opt: Option<&mut FdSet>) -> *mut libc::fd_set {
         Some(&mut FdSet(ref mut raw_fd_set)) => raw_fd_set,
     }
 }
+
 fn to_ptr<T>(opt: Option<&T>) -> *const T {
     match opt {
         None => ptr::null::<T>(),
@@ -138,7 +139,7 @@ fn main() {
 
     // let raw_fd2 = connect_to_localhost_2000().as_raw_fd(); DOES NOT WORK
 
-	let max_fd = raw_fd1.max(raw_fd2.max(raw_fd3));
+    let max_fd = raw_fd1.max(raw_fd2.max(raw_fd3));
 
     println!("Socket 1: {}", raw_fd1);
     println!("Socket 2: {}", raw_fd2);
@@ -321,6 +322,7 @@ fn to_fdset_ptr(opt: Option<&mut FdSet>) -> *mut libc::fd_set {
         Some(&mut FdSet(ref mut raw_fd_set)) => raw_fd_set,
     }
 }
+
 fn to_ptr<T>(opt: Option<&T>) -> *const T {
     match opt {
         None => ptr::null::<T>(),
