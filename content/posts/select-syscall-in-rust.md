@@ -7,6 +7,7 @@ categories : [ "dev" ]
 layout: post
 highlight: false
 draft: false
+summary: "Using the select syscall from Rust, with the libc crate"
 ---
 
 ## Disclaimer
