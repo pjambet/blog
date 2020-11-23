@@ -63,9 +63,9 @@ pub struct FdSet(libc::fd_set);
 impl FdSet {
     pub fn new() -> FdSet {
         unsafe {
-            let mut raw_fd_set = mem::MaybeUninit::<libc::fd_set>::uninit().assume_init();
-            libc::FD_ZERO(&mut raw_fd_set);
-            FdSet(raw_fd_set)
+            let mut raw_fd_set = mem::MaybeUninit::<libc::fd_set>::uninit();
+            libc::FD_ZERO(raw_fd_set.as_mut_ptr());
+            FdSet(raw_fd_set.assume_init())
         }
     }
     pub fn clear(&mut self, fd: RawFd) {
@@ -300,9 +300,9 @@ pub struct FdSet(libc::fd_set);
 impl FdSet {
     pub fn new() -> FdSet {
         unsafe {
-            let mut raw_fd_set = mem::MaybeUninit::<libc::fd_set>::uninit().assume_init();
-            libc::FD_ZERO(&mut raw_fd_set);
-            FdSet(raw_fd_set)
+            let mut raw_fd_set = mem::MaybeUninit::<libc::fd_set>::uninit();
+            libc::FD_ZERO(raw_fd_set.as_mut_ptr());
+            FdSet(raw_fd_set.assume_init())
         }
     }
     pub fn clear(&mut self, fd: RawFd) {
