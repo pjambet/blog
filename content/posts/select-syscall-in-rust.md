@@ -241,7 +241,9 @@ If we had been interested in which sockets could be written to, we would have cr
 
 In other words, `select` modifies the `fd_set` you give it and sets the internal bits for the file descriptors that are ready, it's then up to you to look at the content of `fd_set` and detect which file descriptors are ready. It is also up to you to keep track of which `fd_set` was given to be notified for readability and which one was given for writability.
 
-One metaphor to explain this process is that we give `select` a piece of paper with a list of file descritor ids, each followed by an empty checkbox, and `select` gives it back to us with the checkbox checked for all the ones that are ready.
+One metaphor to explain this process is that we give `select` a huge piece of paper with a list of file descritor ids, each followed by an empty checkbox and we tell it to not look past line `n`. `n` here is the equivalent of the `max_fd` argument we just discussed.
+
+`select` gives it back to us with the checkbox checked for all the ones that are ready.
 
 If you're testing this locally, you'll only have ten seconds to do something from `irb`, feel free to change the value, or pass `None` if you want an infinite timeout.
 
