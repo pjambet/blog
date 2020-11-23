@@ -7,7 +7,7 @@ categories : [ "dev" ]
 layout: post
 highlight: false
 draft: false
-summary: What does "ampersand, symbol" as an argument to a ruby method actually do? It creates a proc.
+summary: What does an ampersand followed by a symbol as an argument to a ruby method actually do? It creates a proc.
 ---
 
 ## What's with this weird looking syntax with an ampersand and a symbol
