@@ -277,7 +277,7 @@ You can find [the code on GitHub](https://github.com/pjambet/rust-and-select)
 
 ---
 
-Liked this, you _might_ like my [free online book](https://redis.pjam.me/) about Rebuilding Redis, in Ruby.
+Liked this post? You _might_ like my [free online book](https://redis.pjam.me/) about Rebuilding Redis, in Ruby.
 
 ---
 
