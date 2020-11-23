@@ -194,7 +194,7 @@ pub struct fd_set {
 
 We can use the macros that come with `select` to interact with it without having to worry too much about the underlying implementation details, `FD_ZERO`, `FD_CLR`, `FD_SET` and `FD_ISSET`
 
-The next block in `impl FdSet` provides Rust functions for the `FdSet` type to use these macros. In the `new` function we create a new instance of `FdSet`, while using `MaybeUninit` to prevent Rust to do what it does for _regular_ variables and that it essentially should trust us here, we know what we're doing.
+The next block in `impl FdSet` provides Rust functions for the `FdSet` type to use these macros. In the `new` function we create a new instance of `FdSet`, while using `MaybeUninit` to prevent Rust to do what it does for _regular_ variables and that it essentially should trust us here, we know what we're doing. You can read more on the topic in the ["out-pointers" section](https://doc.rust-lang.org/stable/std/mem/union.MaybeUninit.html#out-pointers) of the `MaybeUninit` docs.
 
 `FD_ZERO` is used to make sure that the integers that were allocated are in a clean state, technically speaking the OS does not have to clear the bits that were allocated, so we do it, just in case.
 
