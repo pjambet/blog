@@ -139,3 +139,7 @@ I wrote a [small test suite](https://gist.github.com/pjambet/2d1cbf68b0846a04302
 - The “safety” of a relative update query, even in read uncommitted transactions
 - The issue with absolute updates in READ UNCOMMITTED and READ COMMITTED transactions
 - An example using REPEATABLE READ or SERIALIZABLE transactions that requires the application to explicitly handle retries for serialization errors.
+
+---
+
+Enjoyed this post? You'll enjoy my [free online book](https://redis.pjam.me) about Rebuilding Redis, in Ruby.
