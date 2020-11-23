@@ -242,7 +242,7 @@ If we had been interested in which sockets could be written to, we would have cr
 
 In other words, `select` modifies the `fd_set` you give it and sets the internal bits for the file descriptors that are ready, it's then up to you to look at the content of `fd_set` and detect which file descriptors are ready. It is also up to you to keep track of which `fd_set` was given to be notified for readability and which one was given for writability.
 
-One metaphor to explain this process is that we give `select` a huge piece of paper with a list of file descritor ids, each followed by an empty checkbox and we tell it to not look past line `n`. `n` here is the equivalent of the `max_fd` argument we just discussed.
+One metaphor to explain this process is that we give `select` a huge piece of paper with a list of file descriptor ids, each followed by an empty checkbox and we tell it to not look past line `n`. `n` here is the equivalent of the `max_fd` argument we just discussed.
 
 `select` gives it back to us with the checkbox checked for all the ones that are ready.
 
@@ -275,7 +275,7 @@ It works!
 
 At the risk of repeating myself, the purpose of all this is _only_ to learn more about Rust and `select`, if you're writing a _real_ application, look into nix and Tokio instead.
 
-Most of the code was adapted from this [Gist](https://gist.github.com/AGWA/b0931a912a8b22b2d6178a3155e171f3) I foound [on Reddit](https://www.reddit.com/r/rust/comments/65kflg/does_rust_have_native_epoll_support/).
+Most of the code was adapted from this [Gist](https://gist.github.com/AGWA/b0931a912a8b22b2d6178a3155e171f3) I found [on Reddit](https://www.reddit.com/r/rust/comments/65kflg/does_rust_have_native_epoll_support/).
 
 You can find [the code on GitHub](https://github.com/pjambet/rust-and-select)
 
