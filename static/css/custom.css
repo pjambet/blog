@@ -15,3 +15,9 @@ pre {
   font-size: 20px;
   line-height: 1.4em;
 }
+
+/* From: https://stackoverflow.com/a/11842865/919641 */
+article > h2, article > h3, article > h4, article > h4, article > h5 {
+  padding-top: 50px;
+  margin-top: -40px;
+}
