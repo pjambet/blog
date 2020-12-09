@@ -16,20 +16,18 @@ summary: "A design pattern for robust handling of resource creation on a remote 
 
 ## Nomenclature
 
-This pattern is useful when two services communicate with each other. The service initiating the request is referred to as the "frontend" and the service receiving the request is referred to as the "backend". Note that you may or may not own the backend in this context. It may be a third party API, such as Stripe, or GitHub, or another service owned and operated by your organization.
-
-> Some readers might be used to "frontend" being used to identify the client-side javascript part of a codebase but it in this article we are using it to differentiate two types of services.
+This pattern is useful when two services communicate with each other. The service initiating the request is referred to as the "client" and the service receiving the request is referred to as the "server". Note that you may or may not own the server in this context. It may be a third party API, such as Stripe, or GitHub, or another service owned and operated by your organization.
 
 ## Problem
 
-Creating resources remotely is a common operation, being in a micro-services world or not, and handling all the edge cases outside the happy path can be tricky. Errors are unavoidable, common causes are timeout or network related. The main problem is the creation of "dangling resources", a resource successfully created on the backend, without the frontend being aware of it.
+Creating resources remotely is a common operation, being in a micro-services world or not, and handling all the edge cases outside the happy path can be tricky. Errors are unavoidable, common causes are timeout or network related. The main problem is the creation of "dangling resources", a resource successfully created on the server, without the client being aware of it.
 
 The following sequence illustrates the problem:
 
-1. The frontend service sends an http request to the backend service to create a new resource
-2. The backend service processes the request and creates the resource
-3. A network error occurs and the frontend service loses the connection to the backend service
-4. Depending on the nature of the network error, the backend service may or may not notice the connection error, but regardless, the frontend service is now unaware of the existence of the new resource
+1. The client sends an http request to the server to create a new resource
+2. The server processes the request and creates the resource
+3. A network error occurs and the client loses the connection to the server
+4. Depending on the nature of the network error, the server may or may not notice the connection error, but regardless, the client is now unaware of the existence of the new resource
 
 **The intent pattern solves this problem by always creating an intent record before initiating the creation of the resource.** 
 
@@ -37,26 +35,26 @@ The following sequence illustrates the problem:
 
 {{< mermaid >}}
 sequenceDiagram
-    participant Frontend
-    participant Backend
-    Frontend->>Frontend: Persist intent record    
-    Frontend->>+Backend: Create resource request
-    Backend-->>-Frontend: Newly created resource
-    Note right of Backend: Resources must include a unique identifier
-    Frontend->>+Frontend: Update intent record with the unique identifier
+    participant Client
+    participant Server
+    Client->>Client: Persist intent record
+    Client->>+Server: Create resource request
+    Server-->>-Client: Newly created resource
+    Note right of Server: Resources must include a unique identifier
+    Client->>+Client: Update intent record with the unique identifier
 {{< /mermaid >}}
 
 ## Description
 
-Persisting an intent record before issuing an HTTP call for the creation of a resource with a backend service guarantees that the frontend service can act as the source of truth. The following is an exhaustive list of all the possible scenarios:
+Persisting an intent record before issuing an HTTP call for the creation of a resource with a server guarantees that the client can act as the source of truth. The following is an exhaustive list of all the possible scenarios:
 
 1. Happy path: no errors happen, the resource is created and the intent record is updated with the resource id
 2. Failure to create the intent record: something goes wrong when attempting to persist the intent record. No resource is ever created and an error is returned to the client
-3. Backend service error: the intent record is created, but something happened with the backend service. Depending on the nature of the error, the frontend might receive an error, and can update the intent record to flag it as "dead" or may not receive anything back from the backend. In this case the data should be reconciliated. More on that below. 
-4. Network error: the intent record is created, but due to a network error, the frontend never receives the resource object. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
+3. Server error: the intent record is created, but something happened with the server. Depending on the nature of the error, the client might receive an error, and can update the intent record to flag it as "dead" or may not receive anything back from the server. In this case the data should be reconciliated. More on that below. 
+4. Network error: the intent record is created, but due to a network error, the client never receives the resource object. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
 5. Failure to update the intent record: both the intent record and the resource were created, but something happened, preventing the update of the intent record. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
 
-Following this pattern, if an intent record exists, it is extremely likely that the backend service received and processed a resource creation request, but technically not guaranteed, as shown with examples 3) and 4) above. Additionally, it is _guaranteed_ that an intent record exists for every resource creation request processed by the backend service.
+Following this pattern, if an intent record exists, it is extremely likely that the server received and processed a resource creation request, but technically not guaranteed, as shown with examples 3) and 4) above. Additionally, it is _guaranteed_ that an intent record exists for every resource creation request processed by the server.
 
 ### Data reconcilation
 
@@ -64,7 +62,7 @@ Handling dangling records is application specific and the requirements will vary
 
 An intent record that is never finalized, that is updated with a resource identifier, should be considered "dead".
 
-Applications should allow for a grace period to treat an intent record as "dead". The creation process on the backend might take a few seconds, so an intent record five second old without an identifier should probably not be considered dead. On the other hand, the same record should very likely be considered dead after a week. 
+Applications should allow for a grace period to treat an intent record as "dead". The creation process on the server might take a few seconds, so an intent record five second old without an identifier should probably not be considered dead. On the other hand, the same record should very likely be considered dead after a week. 
 
 ## Example: Charge a customer with Stripe
 
@@ -232,7 +230,7 @@ There are alternatives, such as using a different index type, like [BRIN indexes
 
 ## Acknowledgement
 
-Thank you to Brian Cobb ([@bcobb](https://twitter.com/bcobb)) for reviewing an early draft of this post and providing valuable feedback.
+Thank you to Brian Cobb ([@bcobb](https://twitter.com/bcobb)) and Sunny Ng ([@_blahblahblah](https://twitter.com/_blahblahblah)) for reviewing an early draft of this post and providing valuable feedback.
 
 It was mentioned above, but the ["Implementing Stripe-like Idempotency Keys in Postgres" article][idempotency-article] is an amazing resource for a deeper dive into idempotency. And Stripe!
 
