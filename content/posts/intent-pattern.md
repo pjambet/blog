@@ -68,9 +68,9 @@ Applications should allow for a grace period to treat an intent record as "dead"
 
 ## Example: Charge a customer with Stripe
 
-> The term "intent" gets overloaded between Stripe's PaymentIntent object and the "intent record" described in this article, but we started using this term in 2016, a few years before the introduction of the PaymentIntent APIs, back when Charges were the recommended option.
+> The term "intent" gets overloaded between Stripe's PaymentIntent object and the "intent record" described in this article, but we started using this term in 2016, a few years before the introduction of the PaymentIntent APIs, back when [Charges](https://stripe.com/docs/payments/charges-api) were the recommended option.
 
-Charging a customer with Stripe, in its simplest form, requires an API call like the following:
+Charging a customer with Stripe, in its simplest form, requires an API call like the following to the ["Create PaymentIntent" API](https://stripe.com/docs/api/payment_intents/create):
 
 ```bash
 $ curl https://api.stripe.com/v1/payment_intents \
@@ -82,7 +82,7 @@ $ curl https://api.stripe.com/v1/payment_intents \
   -d "payment_method"=pm_card_visa
 ```
 
-It is a good practice to use timeouts when issuing HTTP requests, it could otherwise lead to hanging requests, causing a long wait, and while we observed a p95 around 4.5s for this particular request, it was not uncommon to see requests taking more than 20 or 25s.
+It is a good practice to use timeouts when issuing HTTP requests, it could otherwise lead to requests hanging for a very long time, causing a long wait for user and potential performance issues with the application. Last I checked this particular request had a p95 around 4.5s, but it was not uncommon to see requests taking more than 20 or 25s.
 
 We started using this pattern at Harry's back in 2016 when we were working on our first extraction of a service from our initial monolith.
 
@@ -119,9 +119,9 @@ We first need a table to store the intent records for customer payments:
 ```sql
 CREATE TABLE customer_payments(
     id BIGSERIAL PRIMARY KEY,
-    customer_id BIGINT REFERENCES customers(id),
+    customer_id BIGINT NOT NULL REFERENCES customers(id),
     stripe_payment_intent_id TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -155,9 +155,11 @@ def create_payment_intent(amount, currency, payment_method)
 end
 ```
 
+### One step further, idempotency
+
 This pattern was developped organically at Harry's as we were building new services, but it happens to be a subset of the idempotency pattern described in ["Implementing Stripe-like Idempotency Keys in Postgres"][idempotency-article].
 
-In the example above, it would be very helpful to pass an idempotency key to the create payment intent API call. There is more than one way of achieving this. A naive approach would be to use the `id` attribute returned from the insertion to the `customer_payments` table, after all it is guaranteed to be unique. This would look like the following:
+In the example above, it would be very helpful to pass an idempotency key to the create PaymentIntent API call. There is more than one way of achieving this. A naive approach would be to use the `id` attribute returned from the insertion to the `customer_payments` table, after all it is guaranteed to be unique. This would look like the following:
 
 ```bash
 $ curl https://api.stripe.com/v1/payment_intents \
@@ -170,11 +172,11 @@ $ curl https://api.stripe.com/v1/payment_intents \
   -d "payment_method"=pm_card_visa
 ```
 
-If exposing an internal value like an auto-incremented id is problematic, you could use something else, such as a randomly generated uuid. This might not be a problem if you use a uuid instead of a sequence as the primary key.
+If exposing an internal value like an auto-incremented id to the outside world is problematic[^1], you could use something else, such as a randomly generated uuid. This might not be a problem if you use a uuid instead of a sequence as the primary key.
 
 Regardless of the implementation detail, using an idempotency here can help for the reconciliation step. It would let you retry requests without risking creating a new payment intent.
 
-The idempotency key might not be enough if what you want is finding the dangling resource. In order to do so, you would you need to use the ["List all PaymentIntents" endpoint](https://stripe.com/docs/api/payment_intents/list?lang=curl), but we wouldn't have an easy way to find which PaymentIntent is the one created for our intent record. Stripe allows for [Metadata](https://stripe.com/docs/api/metadata?lang=curl) to be passed:
+The idempotency key might not be enough if what you want is finding the dangling resource. In order to do so, you would need to use the ["List all PaymentIntents" endpoint](https://stripe.com/docs/api/payment_intents/list?lang=curl), but we wouldn't have an easy way to find which PaymentIntent is the one created for our intent record. Stripe allows for [Metadata](https://stripe.com/docs/api/metadata?lang=curl) to be passed:
 
 ```bash
 $ curl https://api.stripe.com/v1/payment_intents \
@@ -194,9 +196,23 @@ The intent pattern gives you a strong foundation to adapt to various business re
 
 ## Conclusion
 
-Efficiently Fetching dangling records can be problematic, especially with large tables. In the example above, the query `SELECT * FROM customer_payments WHERE stripe_payment_intent_id IS NULL AND created_at >= NOW() - INTERVAL '48 HOURS'` will become really slow as the table grows given that both columns are unindexed.
+The patterns described in this article and in ["Implementing Stripe-like Idempotency Keys in Postgres"][idempotency-article] focus on payment with Stripe, but this pattern has more applications.
 
-Easy enough, we can add an index to `stripe_payment_id`:
+Another use case could be for sending emails. Instead of directly handling the process of sending emails, some companies rely on third-party APIs, where the process of sending email is an HTTP call with an email template id and some interpolation variables. In this case, it might be important to know whether or not an email was sent, and the intent pattern can help in the same way it helped with Stripe payments.
+
+---
+
+Efficiently Fetching dangling records can be problematic, especially with large tables. In the example above, the following query, which will fetch all the dead records created more than two days ago, will become really slow as the table grows given that both columns are unindexed. 
+
+```sql
+SELECT *
+FROM customer_payments
+WHERE stripe_payment_intent_id IS NULL
+AND created_at >= NOW() - INTERVAL '48 HOURS'
+```
+
+
+A solution to this problem is to add an index to `stripe_payment_id`:
 
 ```sql
 CREATE INDEX cus_pay_stripe_payment_intent_id ON customer_payments(stripe_payment_intent_id);
@@ -205,19 +221,22 @@ CREATE INDEX cus_pay_stripe_payment_intent_id ON customer_payments(stripe_paymen
 If we only ever need to query for `NULL` values, this index will be extremely wasteful, using a lot of memory when only a tiny portion of the records should be indexed, we can solve this by making it a partial index instead:
 
 ```sql
-CREATE INDEX cus_pay_stripe_payment_intent_id ON customer_payments(stripe_payment_intent_id) WHERE stripe_payment_intent_id IS NULL;
+CREATE INDEX cus_pay_stripe_payment_intent_id
+ON customer_payments(stripe_payment_intent_id)
+WHERE stripe_payment_intent_id IS NULL;
 ```
 
 The index will now only contain the elements with `NULL` values for `stripe_payment_intent_id`, but this is still wasteful. Rows are initially added with a `NULL` value, so an entry will be written to the index, only to be deleted when the record is later updated. This small churn can add up on a busy system.
 
-There are alternatives, such as using a different index type, like [BRIN indexes][doc-brin-index]. This topic will be explored in a later article.
+There are alternatives, such as using a different index type, like [BRIN indexes][doc-brin-index]. This topic will be explored in another article.
 
 ## Acknowledgement
 
-Thank you to Brian Cobb\[[1](https://twitter.com/bcobb)\] for reviewing an early draft of this post and providing valuable feedback.
+Thank you to Brian Cobb ([@bcobb](https://twitter.com/bcobb)) for reviewing an early draft of this post and providing valuable feedback.
 
-It was mentioned above, but the ["Implementing Stripe-like Idempotency Keys in Postgres" article][idempotency-article] is a amazing resource for a deeper dive into idempotency. And Stripe!
+It was mentioned above, but the ["Implementing Stripe-like Idempotency Keys in Postgres" article][idempotency-article] is an amazing resource for a deeper dive into idempotency. And Stripe!
 
 
 [doc-brin-index]:https://postgresql.org/docs/13/interactive/brin.html
 [idempotency-article]:https://brandur.org/idempotency-keys
+[^1]:https://en.wikipedia.org/wiki/German_tank_problem
