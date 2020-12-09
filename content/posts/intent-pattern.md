@@ -82,8 +82,6 @@ $ curl https://api.stripe.com/v1/payment_intents \
 
 It is a good practice to use timeouts when issuing HTTP requests, it could otherwise lead to requests hanging for a very long time, causing a long wait for user and potential performance issues with the application. Last I checked this particular request had a p95 around 4.5s, but it was not uncommon to see requests taking more than 20 or 25s.
 
-We started using this pattern at Harry's back in 2016 when we were working on our first extraction of a service from our initial monolith.
-
 The following diagram illustrates a subset of the sequence of events occuring when a customer places an order. Other elements, such as anything related to the fulfillment of the order, checking if items are in stock is purposefully ignored.
 
 {{< mermaid >}}
