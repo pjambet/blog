@@ -7,6 +7,7 @@ categories : [ "dev" ]
 layout: post
 highlight: false
 draft: false
+summary: "A design pattern for robust handling of resource creation on a remote service."
 ---
 
 **This article is a draft**
@@ -17,11 +18,11 @@ draft: false
 
 This pattern is useful when two services communicate with each other. The service initiating the request is referred to as the "frontend" and the service receiving the request is referred to as the "backend". Note that you may or may not own the backend in this context. It may be a third party API, such as Stripe, or GitHub, or another service owned and operated by your organization.
 
-> Some people might be used to "frontend" being used to identify the client-side javascript part of a codebase but it in this article we are using it to differentiate two types of services.
+> Some readers might be used to "frontend" being used to identify the client-side javascript part of a codebase but it in this article we are using it to differentiate two types of services.
 
 ## Problem
 
-Creating resources remotely is a common operation, being in a micro-services world or not, and handling all the edge cases outside the happy path can be tricky. Network errors will happen, such as timeout issues. The main problem is the creation of "dangling resources", a resource successfully created on the backend, without the frontend being aware of it.
+Creating resources remotely is a common operation, being in a micro-services world or not, and handling all the edge cases outside the happy path can be tricky. Errors are unavoidable, common causes are timeout or network related. The main problem is the creation of "dangling resources", a resource successfully created on the backend, without the frontend being aware of it.
 
 The following sequence illustrates the problem:
 
@@ -47,19 +48,21 @@ sequenceDiagram
 
 ## Description
 
-Persisting an intent record before issuing an HTTP call for the creation of a resource with a backend service guarantees that the frontend service can serve as the source of truth. The following is an exhaustive list of all the possible scenarios:
+Persisting an intent record before issuing an HTTP call for the creation of a resource with a backend service guarantees that the frontend service can act as the source of truth. The following is an exhaustive list of all the possible scenarios:
 
-- Happy path: no errors happen, the resource is created and the intent record is updated with the resource id
-- Failure to create the intent record: something goes wrong when attempting to persist the intent record. No resource is ever created and an error is returned to the client
-- Backend service error: the intent record is created, but something happened with the backend service. Depending on the nature of the error, the frontend might receive an error, and can update the intent record to flag it as "dead" or may not receive anything back from the backend. In this case the data should be reconciliated. More on that below. 
-- Network error: the intent record is created, but due to a network error, the frontend never receives the resource object. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
-- Failure to update the intent record: both the intent record and the resource were created, but something happened, preventing the update of the intent record. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
+1. Happy path: no errors happen, the resource is created and the intent record is updated with the resource id
+2. Failure to create the intent record: something goes wrong when attempting to persist the intent record. No resource is ever created and an error is returned to the client
+3. Backend service error: the intent record is created, but something happened with the backend service. Depending on the nature of the error, the frontend might receive an error, and can update the intent record to flag it as "dead" or may not receive anything back from the backend. In this case the data should be reconciliated. More on that below. 
+4. Network error: the intent record is created, but due to a network error, the frontend never receives the resource object. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
+5. Failure to update the intent record: both the intent record and the resource were created, but something happened, preventing the update of the intent record. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
+
+Following this pattern, if an intent record exists, it is extremely likely that the backend service received and processed a resource creation request, but technically not guaranteed, as shown with examples 3) and 4) above. Additionally, it is _guaranteed_ that an intent record exists for every resource creation request processed by the backend service.
 
 ### Data reconcilation
 
 Handling dangling records is application specific and the requirements will vary from one app to another. Regardless of such requirements, this pattern gives you a great starting point to guarantee the consistency of your system by being able to identify which records have been finalized and which ones have not.
 
-An intent record that is never updated with a resource identifier should be considered "dead".
+An intent record that is never finalized, that is updated with a resource identifier, should be considered "dead".
 
 Applications should allow for a grace period to treat an intent record as "dead". The creation process on the backend might take a few seconds, so an intent record five second old without an identifier should probably not be considered dead. On the other hand, the same record should very likely be considered dead after a week. 
 
@@ -152,6 +155,43 @@ def create_payment_intent(amount, currency, payment_method)
 end
 ```
 
+This pattern was developped organically at Harry's as we were building new services, but it happens to be a subset of the idempotency pattern described in ["Implementing Stripe-like Idempotency Keys in Postgres"][idempotency-article].
+
+In the example above, it would be very helpful to pass an idempotency key to the create payment intent API call. There is more than one way of achieving this. A naive approach would be to use the `id` attribute returned from the insertion to the `customer_payments` table, after all it is guaranteed to be unique. This would look like the following:
+
+```bash
+$ curl https://api.stripe.com/v1/payment_intents \
+  -u sk_XXX_YYY: \
+  -H "Idempotency-Key: DATABASE_ID" \
+  -d amount=2000 \
+  -d currency=usd \
+  -d confirm=true \
+  -d "payment_method_types[]"=card \
+  -d "payment_method"=pm_card_visa
+```
+
+If exposing an internal value like an auto-incremented id is problematic, you could use something else, such as a randomly generated uuid. This might not be a problem if you use a uuid instead of a sequence as the primary key.
+
+Regardless of the implementation detail, using an idempotency here can help for the reconciliation step. It would let you retry requests without risking creating a new payment intent.
+
+The idempotency key might not be enough if what you want is finding the dangling resource. In order to do so, you would you need to use the ["List all PaymentIntents" endpoint](https://stripe.com/docs/api/payment_intents/list?lang=curl), but we wouldn't have an easy way to find which PaymentIntent is the one created for our intent record. Stripe allows for [Metadata](https://stripe.com/docs/api/metadata?lang=curl) to be passed:
+
+```bash
+$ curl https://api.stripe.com/v1/payment_intents \
+  -u sk_XXX_YYY: \
+  -H "Idempotency-Key: DATABASE_ID" \
+  -d amount=2001 \
+  -d currency=usd \
+  -d confirm=true \
+  -d "payment_method_types[]"=card \
+  -d "payment_method"=pm_card_visa \
+  -d "metadata[order_id]"=order-DATABASE_ID
+```
+
+With metadata attached to PaymentIntents, we would now be able to list all of the PaymentIntents created around the creation time of our `custom_payments` row missing a payment intent id, and inspect the `order_id` metadata of PaymentIntent objects returned from the Stripe API to find the dangling one.
+
+The intent pattern gives you a strong foundation to adapt to various business requirements and [the article][idempotency-article] mentioned above is a great deep dive on the topic of idempotency.
+
 ## Conclusion
 
 Efficiently Fetching dangling records can be problematic, especially with large tables. In the example above, the query `SELECT * FROM customer_payments WHERE stripe_payment_intent_id IS NULL AND created_at >= NOW() - INTERVAL '48 HOURS'` will become really slow as the table grows given that both columns are unindexed.
@@ -174,9 +214,10 @@ There are alternatives, such as using a different index type, like [BRIN indexes
 
 ## Acknowledgement
 
-Thank you to ... for reviewing an early draft of this post and providing valuable feedback.
+Thank you to Brian Cobb\[[1](https://twitter.com/bcobb)\] for reviewing an early draft of this post and providing valuable feedback.
 
-This pattern was developped organically at Harry's as we were building new services, but it happens to be a subset of the idempotency pattern described in ["Implementing Stripe-like Idempotency Keys in Postgres"](https://brandur.org/idempotency-keys)
+It was mentioned above, but the ["Implementing Stripe-like Idempotency Keys in Postgres" article][idempotency-article] is a amazing resource for a deeper dive into idempotency. And Stripe!
 
 
 [doc-brin-index]:https://postgresql.org/docs/13/interactive/brin.html
+[idempotency-article]:https://brandur.org/idempotency-keys
