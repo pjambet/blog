@@ -139,7 +139,7 @@ end
 
 def update_intent_record(id, stripe_payment_intent_id)
   # ActiveRecord or similar to update a row from into customer_payments:
-  # UPDATE customer_payments SET stripe_payment_id = ? WHERE id = ?;
+  # UPDATE customer_payments SET stripe_payment_intent_id = ? WHERE id = ?;
 end
 
 def create_payment_intent(amount, currency, payment_method)
@@ -188,7 +188,7 @@ $ curl https://api.stripe.com/v1/payment_intents \
   -d "metadata[order_id]"=order-DATABASE_ID
 ```
 
-With metadata attached to PaymentIntents, we would now be able to list all of the PaymentIntents created around the creation time of our `custom_payments` row missing a payment intent id, and inspect the `order_id` metadata of PaymentIntent objects returned from the Stripe API to find the dangling one.
+With metadata attached to PaymentIntents, we would now be able to list all of the PaymentIntents created around the creation time of our `customer_payments` row missing a payment intent id, and inspect the `order_id` metadata of PaymentIntent objects returned from the Stripe API to find the dangling one.
 
 The intent pattern gives you a strong foundation to adapt to various business requirements and [the article][idempotency-article] mentioned above is a great deep dive on the topic of idempotency.
 
@@ -210,7 +210,7 @@ AND created_at >= NOW() - INTERVAL '48 HOURS'
 ```
 
 
-A solution to this problem is to add an index to `stripe_payment_id`:
+A solution to this problem is to add an index to `stripe_payment_intent_id`:
 
 ```sql
 CREATE INDEX cus_pay_stripe_payment_intent_id ON customer_payments(stripe_payment_intent_id);
