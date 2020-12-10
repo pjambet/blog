@@ -56,7 +56,7 @@ Persisting an intent record before issuing an HTTP call for the creation of a re
 
 Following this pattern, if an intent record exists, it is extremely likely that the server received and processed a resource creation request, but technically not guaranteed, as shown with examples 3) and 4) above. Additionally, it is _guaranteed_ that an intent record exists for every resource creation request processed by the server.
 
-### Data reconcilation
+### Data reconciliation
 
 Handling dangling records is application specific and the requirements will vary from one app to another. Regardless of such requirements, this pattern gives you a great starting point to guarantee the consistency of your system by being able to identify which records have been finalized and which ones have not.
 
@@ -82,7 +82,7 @@ $ curl https://api.stripe.com/v1/payment_intents \
 
 It is a good practice to use timeouts when issuing HTTP requests, it could otherwise lead to requests hanging for a very long time, causing a long wait for user and potential performance issues with the application. Last I checked this particular request had a p95 around 4.5s, but it was not uncommon to see requests taking more than 20 or 25s.
 
-The following diagram illustrates a subset of the sequence of events occuring when a customer places an order. Other elements, such as anything related to the fulfillment of the order, checking if items are in stock is purposefully ignored.
+The following diagram illustrates a subset of the sequence of events occurring when a customer places an order. Other elements, such as anything related to the fulfillment of the order, checking if items are in stock is purposefully ignored.
 
 {{< mermaid >}}
 sequenceDiagram
@@ -153,7 +153,7 @@ end
 
 ### One step further, idempotency
 
-This pattern was developped organically at Harry's as we were building new services, but it happens to be a subset of the idempotency pattern described in ["Implementing Stripe-like Idempotency Keys in Postgres"][idempotency-article].
+This pattern was developed organically at Harry's as we were building new services, but it happens to be a subset of the idempotency pattern described in ["Implementing Stripe-like Idempotency Keys in Postgres"][idempotency-article].
 
 In the example above, it would be very helpful to pass an idempotency key to the create PaymentIntent API call. There is more than one way of achieving this. A naive approach would be to use the `id` attribute returned from the insertion to the `customer_payments` table, after all it is guaranteed to be unique. This would look like the following:
 
@@ -226,7 +226,7 @@ The index will now only contain the elements with `NULL` values for `stripe_paym
 
 There are alternatives, such as using a different index type, like [BRIN indexes][doc-brin-index]. This topic will be explored in another article.
 
-## Acknowledgement
+## Acknowledgment
 
 Thank you to Brian Cobb ([@bcobb](https://twitter.com/bcobb)) and Sunny Ng ([@_blahblahblah](https://twitter.com/_blahblahblah)) for reviewing an early draft of this post and providing valuable feedback.
 
