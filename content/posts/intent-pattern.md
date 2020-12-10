@@ -50,9 +50,9 @@ Persisting an intent record before issuing an HTTP call for the creation of a re
 
 1. Happy path: no errors happen, the resource is created and the intent record is updated with the resource id
 2. Failure to create the intent record: something goes wrong when attempting to persist the intent record. No resource is ever created and an error is returned to the client
-3. Server error: the intent record is created, but something happened with the server. Depending on the nature of the error, the client might receive an error, and can update the intent record to flag it as "dead" or may not receive anything back from the server. In this case the data should be reconciliated. More on that below. 
-4. Network error: the intent record is created, but due to a network error, the client never receives the resource object. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
-5. Failure to update the intent record: both the intent record and the resource were created, but something happened, preventing the update of the intent record. There is now a consistency issue and the issue should ideally be reconciliated. More on that below.
+3. Server error: the intent record is created, but something happened with the server. Depending on the nature of the error, the client might receive an error, and can update the intent record to flag it as "dead" or may not receive anything back from the server. In this case the data should be reconciled. More on that below. 
+4. Network error: the intent record is created, but due to a network error, the client never receives the resource object. There is now a consistency issue and the issue should ideally be reconciled. More on that below.
+5. Failure to update the intent record: both the intent record and the resource were created, but something happened, preventing the update of the intent record. There is now a consistency issue and the issue should ideally be reconciled. More on that below.
 
 Following this pattern, if an intent record exists, it is extremely likely that the server received and processed a resource creation request, but technically not guaranteed, as shown with examples 3) and 4) above. Additionally, it is _guaranteed_ that an intent record exists for every resource creation request processed by the server.
 
