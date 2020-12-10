@@ -230,6 +230,8 @@ There are alternatives, such as using a different index type, like [BRIN indexes
 
 Thank you to Brian Cobb ([@bcobb](https://twitter.com/bcobb)) and Sunny Ng ([@_blahblahblah](https://twitter.com/_blahblahblah)) for reviewing an early draft of this post and providing valuable feedback.
 
+Credit to James Petty ([pettyjamesm](https://github.com/pettyjamesm)) for coming up with the initial implementation that culminated in this pattern. 
+
 It was mentioned above, but the ["Implementing Stripe-like Idempotency Keys in Postgres" article][idempotency-article] is an amazing resource for a deeper dive into idempotency. And Stripe!
 
 
