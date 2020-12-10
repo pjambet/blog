@@ -242,9 +242,9 @@ Found this interesting? You'll enjoy my [free online book][rebuilding-redis-in-r
 
 People like this article:
 
-Ilya Rubnich ([@irubnich](https://twitter.com/irubnich/)):
-
 > this is great
+>
+> -- Ilya Rubnich ([@irubnich](https://twitter.com/irubnich/)):
 
 
 [doc-brin-index]:https://postgresql.org/docs/13/interactive/brin.html
