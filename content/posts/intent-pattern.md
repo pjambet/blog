@@ -234,6 +234,18 @@ Credit to James Petty ([pettyjamesm](https://github.com/pettyjamesm)) for coming
 
 It was mentioned above, but the ["Implementing Stripe-like Idempotency Keys in Postgres" article][idempotency-article] is an amazing resource for a deeper dive into idempotency. And Stripe!
 
+---
+
+Found this interesting? You'll enjoy my [free online book][rebuilding-redis-in-ruby] about rebuilding Redis, in Ruby.
+
+---
+
+People like this article:
+
+Ilya Rubnich ([@irubnich](https://twitter.com/irubnich/)):
+
+> this is great
+
 
 [doc-brin-index]:https://postgresql.org/docs/13/interactive/brin.html
 [idempotency-article]:https://brandur.org/idempotency-keys
