@@ -2,8 +2,8 @@
 title: "Data Structures, Abstractions, Time Complexity and Speed"
 date: 2021-04-13T12:56:29
 lastmod: 2021-04-13T12:56:42
-tags : [ "dev" ]
-categories : [ "dev" ]
+tags : [ "dev", "ruby", "js", "scala", "redis" ]
+categories : [ "dev", "ruby", "js", "scala", "redis" ]
 layout: post
 highlight: false
 draft: false
