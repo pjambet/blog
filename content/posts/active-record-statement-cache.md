@@ -1,5 +1,5 @@
 ---
-title: "ActiveRecord caches statement for find_by queries"
+title: "ActiveRecord caches generated queries for find_by queries"
 date: 2021-12-11
 lastmod: 2021-12-11
 tags : [ "dev", "rails", "activerecord", "sql" ]
