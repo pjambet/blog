@@ -19,7 +19,7 @@ When you call `Post.find(1)` or `Post.find_by(id: 1)`, ActiveRecord will cache t
 
 ## Why does it actually matter?
 
-This is a small internal optimization that should be invisible in most cases. The generated queries are paramerized, so once they are cached, they can be reused regardless of the arguments. It should speed things up and all is well.
+This is a small internal optimization that should be invisible in most cases. The generated queries are parameterized, so once they are cached, they can be reused regardless of the arguments. It should speed things up and all is well.
 
 I had an issue when hooking into Active Record's internals, using a custom module included into `ActiveRecord::Relation`:
 
