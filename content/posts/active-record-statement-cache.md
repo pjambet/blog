@@ -7,10 +7,10 @@ categories : [ "dev" ]
 layout: post
 highlight: false
 draft: false
-summary: "Active Record caches the generated queries, when using `find_by` and `find`"
+summary: "Active Record caches generated queries, when using `find_by` and `find`"
 ---
 
-__tl;dr; Active Record caches the generated queries, when using `find_by` and `find`. This is a different type of cache, unrelated to [`QueryCache`][query-cache] and prepared statements.__
+__tl;dr; Active Record caches generated queries, when using `find_by` and `find`. This is a different type of cache, unrelated to [`QueryCache`][query-cache] and prepared statements.__
 
 
 ## What exactly does ActiveRecord cache, and when?
