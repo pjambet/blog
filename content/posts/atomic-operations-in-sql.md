@@ -37,8 +37,10 @@ It is important to note that since the UPDATE query will implicitly use a row le
 
 Let’s insert two rows in the test table.
 
+```sql
 INSERT INTO test VALUES (1, 0);
 INSERT INTO test VALUES (2, 0);
+```
 
 We can trigger a deadlock with two psql sessions:
 
