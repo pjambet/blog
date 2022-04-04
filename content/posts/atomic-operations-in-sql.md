@@ -16,7 +16,7 @@ We recently rewrote our inventory management system and managed to improve the p
 
 SQL supports atomic increment and decrement operations on numeric columns. The “trick” is to use an update query based on the following pattern:
 
-```
+```sql
 -- This assumes the existence of a table defined as:
 -- CREATE TABLE test(id SERIAL PRIMARY KEY, x INTEGER);
 UPDATE test set x = x - 1 where id = 1;
@@ -108,7 +108,7 @@ Real world example
 
 It is common for e-commerce companies to keep track of inventories for each SKU sold on the platform, a simple inventory table could be defined as:
 
-```
+```sql
 CREATE TABLE inventories(sku VARCHAR(3) PRIMARY KEY, quantity INTEGER);
 ```
 
