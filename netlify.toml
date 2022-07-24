@@ -38,3 +38,23 @@ HUGO_ENABLEGITINFO = "true"
   for = "/images/*"
   [headers.values]
   cache-control = "public,max-age=604800"  
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+  cache-control = "public,max-age=604800"
+
+[[headers]]
+  for = "*.ico"
+  [headers.values]
+  cache-control = "public,max-age=604800"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+  cache-control = "public,max-age=604800"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+  cache-control = "public,max-age=604800"
