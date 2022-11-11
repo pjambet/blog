@@ -105,3 +105,6 @@ disqusShortname = "blog-1h4ea8llx6"
     name = "Archive"
     url = "posts"
     weight = 4
+
+[markup.goldmark.renderer]
+  unsafe= true
