@@ -2,7 +2,7 @@
 title: "A concurrent Go TCP Server"
 date: 2022-05-07T09:30:58-04:00
 lastmod: 2022-05-07T09:30:58-04:00
-tags : [ "dev", "go" ]
+tags : [ "dev", "go", "tcp servers" ]
 categories : [ "dev" ]
 layout: post
 highlight: false
