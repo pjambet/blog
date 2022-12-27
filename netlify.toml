@@ -19,6 +19,7 @@ HUGO_ENV = "staging"
 command = "hugo --gc --minify --buildDrafts --buildFuture -b $DEPLOY_PRIME_URL"
 
 [context.deploy-preview.environment]
+HUGO_ENV = "staging"
 HUGO_VERSION = "0.70.0"
 
 [context.branch-deploy]
