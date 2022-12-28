@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-func handleConnection(c net.Conn) {
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+func handleConnection(client net.Conn) {
+	fmt.Printf("Serving %s\n", client.RemoteAddr().String())
 
 	for {
-		netData, err := bufio.NewReader(c).ReadString('\n')
+		netData, err := bufio.NewReader(client).ReadString('\n')
 		if err != nil {
 			fmt.Println("error reading:", err)
 			break
@@ -20,11 +20,11 @@ func handleConnection(c net.Conn) {
 
 		temp := strings.TrimSpace(netData)
 		fmt.Println("Received:", temp)
-		c.Write([]byte(temp + "\n"))
+		client.Write([]byte(temp + "\n"))
 	}
 
 	fmt.Println("Closing c")
-	c.Close()
+	client.Close()
 }
 
 func main() {
@@ -35,19 +35,19 @@ func main() {
 	}
 
 	port := ":" + arguments[1]
-	l, err := net.Listen("tcp4", port)
+	server, err := net.Listen("tcp4", port)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer l.Close()
+	defer server.Close()
 
 	for {
-		c, err := l.Accept()
+		client, err := server.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go handleConnection(c)
+		go handleConnection(client)
 	}
 }

@@ -1,7 +1,7 @@
 ---
 title: "A concurrent Go TCP Server"
-date: 2022-05-07T09:30:58-04:00
-lastmod: 2022-05-07T09:30:58-04:00
+date: 2022-12-28T00:00:00Z
+lastmod: 2022-12-28T00:00:00Z
 tags : [ "dev", "go", "tcp servers" ]
 categories : [ "dev" ]
 layout: post
@@ -10,13 +10,13 @@ draft: true
 summary: "A concurrent TCP server in Go responding to Redis-like GET & SET commands."
 ---
 
-## An arbirary definition of "concurrent TCP server"
+## An arbitrary definition of "concurrent TCP server"
 
 By the end of this post we will have a concurrent TCP server written in Go, but before doing so, let's first define exactly what we're _actually_ trying to achieve.
 
 The TCP server piece is not ambiguous, the server will be reachable over TCP, cool, but the concurrent part is a bit more subjective.
 
-In this article we'll define "concurrent server" as a server that can accept connections from multiple clients and respond to them regardless of the order in which they connect and send requests. For instance, client C1 connects, client C2 connects, C2 can send a request and get a response no matter what C1 is doing, whether staying idle, disconnecting or sending requests.
+In this article we'll define "concurrent server" as a server that can accept connections from multiple clients and responds to them regardless of the order in which they connect and send requests. For instance, client C1 connects, client C2 connects, C2 can send a request and get a response no matter what C1 is doing, whether staying idle, disconnecting or sending requests as well.
 
 {{% note %}}
 I've never written Go code professionally, most of what you're seeing here is a lot of trial and error combined with finding code on the Internet.
@@ -48,11 +48,11 @@ import (
 	"strings"
 )
 
-func handleConnection(c net.Conn) {
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+func handleConnection(client net.Conn) {
+	fmt.Printf("Serving %s\n", client.RemoteAddr().String())
 
 	for {
-		netData, err := bufio.NewReader(c).ReadString('\n')
+		netData, err := bufio.NewReader(client).ReadString('\n')
 		if err != nil {
 			fmt.Println("error reading:", err)
 			break
@@ -60,11 +60,11 @@ func handleConnection(c net.Conn) {
 
 		temp := strings.TrimSpace(netData)
 		fmt.Println("Received:", temp)
-		c.Write([]byte(temp + "\n"))
+		client.Write([]byte(temp + "\n"))
 	}
 
 	fmt.Println("Closing c")
-	c.Close()
+	client.Close()
 }
 
 func main() {
@@ -75,20 +75,20 @@ func main() {
 	}
 
 	port := ":" + arguments[1]
-	l, err := net.Listen("tcp4", port)
+	server, err := net.Listen("tcp4", port)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer l.Close()
+	defer server.Close()
 
 	for {
-		c, err := l.Accept()
+		client, err := server.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go handleConnection(c)
+		go handleConnection(client)
 	}
 }
 ```
@@ -103,6 +103,8 @@ The `handleConnection` function operates in a fairly similar manner. It also sta
 
 We're essentially heavily leaning into the go runtime, which takes care of running the goroutines, as long as we're careful to run blocking code in ways that doesn't interfere with other parts of the server, we don't have anything else to do to handle any number of clients.
 
+In order to understand to understand the architecture of this approach, it's important to categorize all the goroutines started by the server in two groups, the first one has a single goroutine, started directly in the main function, we'll refer to it as the **main coroutine**, and the other group is for all the goroutines started for all the connected clients, we'll refer to them as the **client-specific coroutines**
+
 {{% note %}}
 "Any number of clients" is a stretch, there is _technically_ a limit. Handling clients is not free, it uses resources, some memory is allocated for each new client and a file descriptor is used. Different OSes handle this their own way, but there is a limit of file descriptors a process can keep open, so our server cannot handle an "unlimited" number of clients.
 
@@ -114,68 +116,79 @@ That being said, the Go runtime is famous for being able to handle _a lot_ of go
 
 For each client we keep connected, we read what it sends, print it from the server process, and wait for the next line of text. We can build on top of this to handle `GET` & `SET` commands.
 
-The main change is ...
+The key compoment of this new version is the use of a channel field as part of the data being transmitted back to the **main coroutine**. This is what allows to achieve bi-directional communication. In other words the **client-specific coroutines** can send data back to the **main coroutine** and the **main coroutine** can send data back to the specific coroutine that send said data.
 
 The example is inspired from [this example][stateful-goroutines]
 
 ```go
 // [...]
 
-type op struct {
-	key   string
-	value string
-	resp  chan string
+type Command int
+
+const (
+	Get Command = iota + 1 // 1
+	Set                    // 2
+)
+
+type commandMessage struct {
+	commandName     Command
+	key             string
+	value           string
+	responseChannel chan string
 }
 
-func handleConnection(channel chan op, c net.Conn) {
+func handleConnection(commandChannel chan commandMessage, client net.Conn) {
 	for {
 		// [...]
-		if temp == "STOP" || temp == "QUIT" {
+		if commandString == "STOP" || commandString == "QUIT" {
 			break
-		} else if strings.HasPrefix(temp, "GET") {
-			parts := strings.Split(temp, " ")
+		} else if strings.HasPrefix(commandString, "GET") {
+			parts := strings.Split(commandString, " ")
 			if len(parts) > 1 {
 				key := parts[1]
-				op := op{
-					key:  key,
-					resp: make(chan string)}
-				channel <- op
-				res := <-op.resp
-				c.Write([]byte(res + "\n"))
+				command := commandMessage{
+					commandName:     Get,
+					key:             key,
+					responseChannel: make(chan string)}
+				commandChannel <- command
+				value := <-command.responseChannel
+				client.Write([]byte(value + "\n"))
 			}
-		} else if strings.HasPrefix(temp, "SET") {
-			parts := strings.Split(temp, " ")
+		} else if strings.HasPrefix(commandString, "SET") {
+			parts := strings.Split(commandString, " ")
 			if len(parts) > 2 {
 				key := parts[1]
 				value := parts[2]
-				op := op{
-					key:   key,
-					value: value,
-					resp:  make(chan string)}
-				channel <- op
-				res := <-op.resp
-				c.Write([]byte(res + "\n"))
+				command := commandMessage{
+					commandName:     Set,
+					key:             key,
+					value:           value,
+					responseChannel: make(chan string)}
+				commandChannel <- command
+				res := <-command.responseChannel
+				client.Write([]byte(res + "\n"))
 			}
 		}
 	}
-	c.Close()
+	client.Close()
 }
 
 func main() {
 	// [...]
 
-	m := make(map[string]string)
-	channel := make(chan op)
+	db := make(map[string]string)
+	commandChannel := make(chan commandMessage)
 
 	go func() {
 		for {
 			select {
-			case res := <-channel:
-				if len(res.value) > 0 {
-					m[res.key] = res.value
-					res.resp <- "OK"
-				} else {
-					res.resp <- m[res.key]
+			case command := <-commandChannel:
+				switch command.commandName {
+				case Get:
+					command.responseChannel <- db[command.key]
+				case Set:
+					db[command.key] = command.value
+					command.responseChannel <- "OK"
 				}
 			}
 		}
@@ -183,18 +196,22 @@ func main() {
 
 	for {
 		// [...]
-		go handleConnection(channel, c)
+		go handleConnection(commandChannel, client)
 	}
 }
 ```
 
 This new version relies on [Go channels][go-channels]. In the main function, we now create a channel for a type we also added, `op`. This type is a holder for three values, a key and a value, both strings, and a field called `resp` a string channel.
 
-In order to understand to understand the architecture of this approach, it's important to categorize all the goroutines started by the server in two groups, the first one has a single goroutine, started directly in the main function, which we'll refer to as the main coroutines, and the other group is for all the goroutines started for all the connected clients.
+Above we categorized our coroutines in two groups, the **main coroutine** and all the **client-specific coroutines**.
 
 The channel we create in the main function will be passed to each goroutine started when new clients connect. This will be used for all these clients goroutines to send messages back to the main coroutine. Without anything else, the main goroutine would have no way to send messages back to any of the client goroutines. This is the problem that the `resp` goroutine inside `op` instances solves, but we'll get back to it later when we look at how the data is shared between all the coroutines.
 
 We also create our main data store in the main function, a `map[string]string`. When we receive a `GET` command, we'll read from that map, and for a `SET` command, we'll add a key/value pair to it.
+
+## Want more?
+
+I started a repo where I'm trying to do the same thing in various languages, go check it out if for instance you're curious about how to do this with node, python or ruby! [pjambet/tcp-servers][gh-tcp-servers]
 
 ### Links:
 
@@ -206,3 +223,4 @@ We also create our main data store in the main function, a `map[string]string`. 
 [so-goroutines]:https://stackoverflow.com/questions/8509152/max-number-of-goroutines
 [stateful-goroutines]:https://gobyexample.com/stateful-goroutines
 [go-channels]:https://go.dev/doc/effective_go#channels
+[gh-tcp-servers]:https://github.com/pjambet/tcp-servers
