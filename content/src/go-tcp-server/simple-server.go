@@ -23,7 +23,7 @@ func handleConnection(client net.Conn) {
 		client.Write([]byte(temp + "\n"))
 	}
 
-	fmt.Println("Closing c")
+	fmt.Println("Closing client")
 	client.Close()
 }
 
