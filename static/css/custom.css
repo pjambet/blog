@@ -42,7 +42,7 @@ article>h5 {
   margin-bottom: 2em;
   padding: 1em;
   overflow-x: auto;
-  background-color: rgba(0, 0, 0, 5%);
+  background-color: rgba(0, 0, 0, 3%);
 }
 
 .admonition-content p+p {
