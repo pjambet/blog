@@ -33,6 +33,8 @@ Oh, and, finally, the last constraint, we're only using the standard library, no
 
 ## A Server that doesn't do much
 
+We're going to build our server step by step, let's start with the "TCP server" part.
+
 The following is a server that accepts connections, echoes back to the client what it received and keeps doing that until the client disconnects.
 
 It's mainly copied from [this blog post][concurrent-tcp-server-go] by Mihalis Tsoukalos, with some modifications.
@@ -261,7 +263,7 @@ All the client coroutines use a reference to the same map. This is fine for a co
                   ▼     └────────┘      ▼
 ```
 
-We start with a map with a single key, where the value is `1`. Two clients each send an `INCR` command for the same key, the only valid outcome is for this sequence of operations if for the final value to be `3`.
+We start with a map with a single key, where the value is `1`. Two clients each send an `INCR` command for the same key, the only valid outcome for this sequence of operations if for the final value to be `3`.
 
 But with our implementation it is entirely possible for it to be `2`. The likelihood of this exact problem to occur is rare in the sense that the read operation from the map is immediately followed by the conversion to an int, the increment and the update in the map. But since we're running the code inside goroutines, we have zero control over the sequence of operations. We're at the mercy of the go runtime as well as the underlying OS.
 
@@ -277,6 +279,12 @@ Let's then spin up one thread per socket and make it call `INCR a`:
 sockets.map { |s| Thread.new { s.puts("INCR a"); puts s.gets } }
 ```
 _We call `gets` to read the response from the server_
+
+For good measure, let's close all these sockets:
+
+```ruby
+sockets.each(&:close)
+```
 
 Results will vary from one machine to the next, as well as from one run to the next, but on my mabook air, I often see the last value printed being 98 or 99, instead of the expected 100.
 
@@ -296,9 +304,9 @@ Let's fix this.
 
 As mentioned earlier, the previous version was subject to race conditions. We can keep leaning on goroutines to improve it and avoid these issues.
 
-We are going to introduce a new goroutine to handle all the operations on the map in a way that makes concurrent writes impossible. In order to achieve this we will need to use channels, for goroutines to communicate. We will refer to this new coroutine as the **DB coroutine**.
+We are going to introduce a new goroutine to handle all the operations on the map in a way that makes concurrent writes impossible. In order to achieve this we will need to use channels for goroutines to communicate with each other. We will also introduce a new goroutine with the sole purpose to control the reads and writes to the map. We will refer to this new coroutine as the **DB coroutine**. This is done with the `handleDB` function.
 
-The key compoment of this new version is the use of a channel field as part of the data being transmitted back to the **DB coroutine**. This is what allows to achieve bi-directional communication. In other words the **client-specific coroutines** can send data back to the **DB coroutine** and the **DB coroutine** can send data back to the specific coroutine that send said data.
+The key compoment of this new version is the use of a channel field as part of the data being transmitted back to the **DB coroutine**. This is what allows us to achieve bi-directional communication. In other words the **client-specific coroutines** can send data back to the **DB coroutine** and the **DB coroutine** can send data back to the specific coroutine that send said data.
 
 This version is inspired from [this example][stateful-goroutines] from Go by Example:
 
@@ -451,7 +459,7 @@ Let's first talk about the new types we're adding:
 
 We create a new type, `Command`, to act as en enum-like list of all the commands supported by the server.
 
-We also create a new struct type, `CommandMessage`. The first field will be of type `Command`, which, as just discussed, identifies the command being handled. The next two `string` fields identify the data of the command, we always have a `key`, and we a value in the case of a `SET` command. It was simpler to always have the field, regardless of the command, and have its value populated only if it's a `SET` command.
+We also create a new struct type, `CommandMessage`. The first field will be of type `Command`, which, as just discussed, identifies the command being handled. The next two `string` fields identify the data of the command, we always have a `key`, and we a have value in the case of a `SET` command. It was simpler to always have the field, regardless of the command, and have its value populated only if it's a `SET` command.
 
 The last field is the channel previously mentioned, `responseChannel`. This will allow the **DB coroutine** to respond back to the coroutine that sent the `CommandMessage` in the first place. Remember that channels are bidirectional, when we create the channel in the **client goroutine**, no other goroutine can write to it. By including it in the message we send to `commandChannel`, the **DB coroutine** can write to it, and we can get retrieve that content from the client goroutine:
 
@@ -464,16 +472,15 @@ commandChannel <- commandMessage
 response = <-commandMessage.responseChannel
 ```
 
+With this new pattern, instead of having of having each **client goroutine** perform the sequence of operations specific to each command, they instead send a message to the **DB coroutine** with the data necessary to perform the operation, and wait for a response. This approach protects us from race conditions because there is a single goroutine processing the messages written to `commandChannel`. Sending message to `commandChannel` results in them being added to the channel's buffer, and in turn the **DB coroutine** will process these messages one by one through the `select` statement.
 
-Above we categorized our coroutines in two groups, the **main coroutine** and all the **client-specific coroutines**.
-
-The channel we create in the main function will be passed to each goroutine started when new clients connect. This will be used for all these clients goroutines to send messages back to the main coroutine. Without anything else, the main goroutine would have no way to send messages back to any of the client goroutines. This is the problem that the `resp` goroutine inside `op` instances solves, but we'll get back to it later when we look at how the data is shared between all the coroutines.
-
-We also create our main data store in the main function, a `map[string]string`. When we receive a `GET` command, we'll read from that map, and for a `SET` command, we'll add a key/value pair to it.
+You can run the ruby script we used above and notice that the final outcome will always be 100, and the go server will never crash with `fatal error: concurrent map writes` 🎉
 
 ## Want more?
 
-I started a repo where I'm trying to do the same thing in various languages, go check it out if for instance you're curious about how to do this with node, python or ruby! [pjambet/tcp-servers][gh-tcp-servers]
+I started a repo where I'm trying to do the same thing in various languages, go check it out if for instance you're curious about how to do this with node, python or ruby: [pjambet/tcp-servers][gh-tcp-servers]
+
+The code from this article is [on GitHub][github-code].
 
 ### Links:
 
@@ -492,3 +499,4 @@ I started a repo where I'm trying to do the same thing in various languages, go 
 [docs-strconv-itoa]:https://pkg.go.dev/strconv#Itoa
 [accept-function]:https://pkg.go.dev/net#TCPListener.Accept
 [go-map-fatal-error]:https://github.com/golang/go/blob/9123221ccf3c80c741ead5b6f2e960573b1676b9/src/runtime/map.go/#L414-L416
+[github-code]:https://github.com/pjambet/blog/tree/master/content/src/go-tcp-server
