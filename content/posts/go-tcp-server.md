@@ -304,9 +304,9 @@ Let's fix this.
 
 As mentioned earlier, the previous version was subject to race conditions. We can keep leaning on goroutines to improve it and avoid these issues.
 
-We are going to introduce a new goroutine to handle all the operations on the map in a way that makes concurrent writes impossible. In order to achieve this we will need to use channels for goroutines to communicate with each other. We will also introduce a new goroutine with the sole purpose to control the reads and writes to the map. We will refer to this new coroutine as the **DB coroutine**. This is done with the `handleDB` function.
+We are going to introduce a new goroutine to handle all the operations on the map in a way that makes concurrent writes impossible. In order to achieve this we will need to use channels for our goroutines to communicate with each other. We will refer to this new coroutine as the **DB coroutine**. This is done with the `handleDB` function.
 
-The key compoment of this new version is the use of a channel field as part of the data being transmitted back to the **DB coroutine**. This is what allows us to achieve bi-directional communication. In other words the **client-specific coroutines** can send data back to the **DB coroutine** and the **DB coroutine** can send data back to the specific coroutine that send said data.
+The key compoment of this new version is the use of a channel field as part of the data being transmitted back to the **DB coroutine**. This is what allows us to achieve bi-directional communication. In other words the **client-specific coroutines** can send data to the **DB coroutine** and the **DB coroutine** can send data back to the specific coroutine that send said data.
 
 This version is inspired from [this example][stateful-goroutines] from Go by Example:
 
@@ -459,9 +459,9 @@ Let's first talk about the new types we're adding:
 
 We create a new type, `Command`, to act as en enum-like list of all the commands supported by the server.
 
-We also create a new struct type, `CommandMessage`. The first field will be of type `Command`, which, as just discussed, identifies the command being handled. The next two `string` fields identify the data of the command, we always have a `key`, and we a have value in the case of a `SET` command. It was simpler to always have the field, regardless of the command, and have its value populated only if it's a `SET` command.
+We also create a new struct type, `CommandMessage`. The first field will be of type `Command`, which, as just discussed, identifies the command being handled. The next two `string` fields identify the data of the command, we always have a `key`, and we a have `value` in the case of a `SET` command. It was simpler to always have the field, regardless of the command, and have its value populated only if it's a `SET` command.
 
-The last field is the channel previously mentioned, `responseChannel`. This will allow the **DB coroutine** to respond back to the coroutine that sent the `CommandMessage` in the first place. Remember that channels are bidirectional, when we create the channel in the **client goroutine**, no other goroutine can write to it. By including it in the message we send to `commandChannel`, the **DB coroutine** can write to it, and we can get retrieve that content from the client goroutine:
+The last field is the channel previously mentioned, `responseChannel`. This will allow the **DB coroutine** to respond back to the **client coroutine** that sent the `CommandMessage` in the first place. Remember that channels are bidirectional, when we create the channel in the **client goroutine**, no other goroutine can write to it. By including it in the message we send to `commandChannel`, the **DB coroutine** can write to it, and we can get retrieve that content from the **client goroutine**:
 
 ```go
 // In the GET case:
@@ -472,7 +472,7 @@ commandChannel <- commandMessage
 response = <-commandMessage.responseChannel
 ```
 
-With this new pattern, instead of having of having each **client goroutine** perform the sequence of operations specific to each command, they instead send a message to the **DB coroutine** with the data necessary to perform the operation, and wait for a response. This approach protects us from race conditions because there is a single goroutine processing the messages written to `commandChannel`. Sending message to `commandChannel` results in them being added to the channel's buffer, and in turn the **DB coroutine** will process these messages one by one through the `select` statement.
+With this new pattern, instead of having each **client goroutine** perform the sequence of operations specific to each command, they instead send a message to the **DB coroutine** with the data necessary to perform the operation, and wait for a response. This approach protects us from race conditions because there is a single goroutine processing the messages written to `commandChannel`. Sending message to `commandChannel` results in them being added to the channel's buffer, and in turn the **DB coroutine** will process these messages one by one through the `select` statement.
 
 You can run the ruby script we used above and notice that the final outcome will always be 100, and the go server will never crash with `fatal error: concurrent map writes` 🎉
 
