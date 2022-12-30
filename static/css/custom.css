@@ -52,3 +52,9 @@ article>h5 {
 .admonition.warning {
   border-color: #e6a700;
 }
+
+@media screen and (max-width: 480px) {
+  ul li a {
+    overflow-wrap: break-word;
+  }
+}
