@@ -931,6 +931,7 @@ The code from this article is [on GitHub][github-code].
 - [https://opensource.com/article/18/5/building-concurrent-tcp-server-go][concurrent-tcp-server-go]
 - [https://gobyexample.com/stateful-goroutines][stateful-goroutines]
 
+_Thanks to [Vikram Oberoi](https://twitter.com/voberoi) & [Brian Cobb](https://twitter.com/bcobb) for reviewing early versions of this article_
 
 [concurrent-tcp-server-go]:https://opensource.com/article/18/5/building-concurrent-tcp-server-go
 [so-goroutines]:https://stackoverflow.com/questions/8509152/max-number-of-goroutines
