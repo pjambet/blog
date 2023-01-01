@@ -5,53 +5,86 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
-type op struct {
-	key   string
-	value string
-	resp  chan string
-}
+func handleConnection(db map[string]string, client net.Conn) {
+	defer client.Close()
 
-func handleConnection(channel chan op, c net.Conn) {
 	for {
-		netData, err := bufio.NewReader(c).ReadString('\n')
+		netData, err := bufio.NewReader(client).ReadString('\n')
 		if err != nil {
 			fmt.Println("error reading:", err)
 			return
 		}
 
-		temp := strings.TrimSpace(netData)
-		if temp == "STOP" || temp == "QUIT" {
-			break
-		} else if strings.HasPrefix(temp, "GET") {
-			parts := strings.Split(temp, " ")
+		var response string
+		commandString := strings.TrimSpace(netData)
+		parts := strings.Split(commandString, " ")
+		command := parts[0]
+
+		switch command {
+		case "STOP", "QUIT":
+			return
+		case "GET":
 			if len(parts) > 1 {
 				key := parts[1]
-				op := op{
-					key:  key,
-					resp: make(chan string)}
-				channel <- op
-				res := <-op.resp
-				c.Write([]byte(res + "\n"))
+
+				response = db[key]
+			} else {
+				response = "ERR wrong number of arguments for 'get' command"
 			}
-		} else if strings.HasPrefix(temp, "SET") {
-			parts := strings.Split(temp, " ")
+		case "SET":
 			if len(parts) > 2 {
 				key := parts[1]
 				value := parts[2]
-				op := op{
-					key:   key,
-					value: value,
-					resp:  make(chan string)}
-				channel <- op
-				res := <-op.resp
-				c.Write([]byte(res + "\n"))
+
+				db[key] = value
+				response = "OK"
+			} else {
+				response = "ERR wrong number of arguments for 'set' command"
 			}
+		case "INCR":
+			if len(parts) > 1 {
+				key := parts[1]
+				value, ok := db[key]
+
+				if ok {
+					intValue, err := strconv.Atoi(value)
+					if err != nil {
+						response = "ERR value is not an integer or out of range"
+					} else {
+						response = strconv.Itoa(intValue + 1)
+						db[key] = response
+					}
+				} else {
+					response = "1"
+					db[key] = response
+				}
+			} else {
+				response = "ERR wrong number of arguments for 'incr' command"
+			}
+		case "DEL":
+			if len(parts) > 1 {
+				key := parts[1]
+				_, ok := db[key]
+
+				if ok {
+					delete(db, key)
+					response = "1"
+				} else {
+					response = "0"
+				}
+			} else {
+				response = "ERR wrong number of arguments for 'del' command"
+			}
+		default:
+			response = "ERR unknown command"
 		}
+
+		client.Write([]byte(response + "\n"))
 	}
-	c.Close()
 }
 
 func main() {
@@ -61,37 +94,22 @@ func main() {
 		return
 	}
 
-	port := ":" + arguments[1]
-	l, err := net.Listen("tcp4", port)
+	PORT := ":" + arguments[1]
+	server, err := net.Listen("tcp4", PORT)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer l.Close()
+	defer server.Close()
 
-	m := make(map[string]string)
-	channel := make(chan op)
-
-	go func() {
-		for {
-			select {
-			case res := <-channel:
-				if len(res.value) > 0 {
-					m[res.key] = res.value
-					res.resp <- "OK"
-				} else {
-					res.resp <- m[res.key]
-				}
-			}
-		}
-	}()
+	db := make(map[string]string)
 
 	for {
-		c, err := l.Accept()
+		client, err := server.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go handleConnection(channel, c)
+		go handleConnection(db, client)
 	}
 }
