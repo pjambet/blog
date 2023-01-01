@@ -1,5 +1,5 @@
 ---
-title: "A concurrent TCP Server, in Go"
+title: "A toy Redis Server, in Go"
 date: 2022-12-28T00:00:00Z
 lastmod: 2022-12-28T00:00:00Z
 tags : [ "dev", "go", "tcp servers" ]
@@ -7,31 +7,30 @@ categories : [ "dev" ]
 layout: post
 highlight: false
 draft: true
-summary: "A concurrent TCP server in Go, responding to Redis-like GET, SET, DEL & INCR commands."
+summary: "A toy Redis server in Go, responding to a small subset of commands."
 ---
 
-## An arbitrary definition of "concurrent TCP server"
+## What we're building
 
-By the end of this post we will have a concurrent TCP server written in Go, but let's first define exactly what we're _actually_ trying to achieve.
+By the end of this post we will have a concurrent TCP server written in Go, implementing a small subset of Redis commands. We'll focus on the following features:
 
-The TCP server piece is not ambiguous, the server will be reachable over TCP, cool, but the concurrent part is a bit more subjective.
-
-In this article we'll define "concurrent server" as a server that can accept connections from multiple clients and responds to them regardless of the order in which they connect and send requests. For instance, client C1 connects, client C2 connects, C2 can send a request and get a response no matter what C1 is doing, whether staying idle, disconnecting or sending requests as well.
-
-{{% note %}}
-I've never written Go code professionally, most of what you're seeing here is a lot of trial and error combined with finding code on the Internet.
-{{% /note %}}
-
-### Features
-
-A TCP server by itself is not _that_ interesting to me, I want the server to keep the connections open and do
-_something_. We're going to implement a very basic version of Redis where the server responds to simplified versions of the `GET`, `SET`, `DEL` & `INCR` commands. `GET` accepts a single argument, the key to be returned and `SET` accepts two argument, a key and a value. `DEL` accepts a single key argument and deletes the entry for that key, if any. Finally, `INCR` accepts a single argument and increments the existing value. If the value is not an integer, it's an error, if there are no values, it gets initialized to `1`, resulting in an identical outcome as calling `SET <key> 1`. Everything is a string under the hood, keys, values, like in Redis, the real one.
+- It will be reachable over TCP
+- It can handle concurrent clients. That is, it can accept connections from multiple clients and responds to them regardless of the order in which they connect and send requests. For instance, client C1 connects, client C2 connects, C2 can send a request and get a response no matter what C1 is doing, whether staying idle, disconnecting or sending requests as well.
+- The following will be implemented:
+	- `GET`: Accepts a string, and return the value stored for that key, if any
+	- `SET`: Accepts two strings, a key and a value, and sets the value for the key, overriding any values that may have been present
+	- `DEL`: Accepts a string and deletes the value that may have been there
+	- `INCR`: Accepts a single argument and increments the existing value. If the value is not an integer, it's an error, if there are no values, it gets initialized to `1`, resulting in an identical outcome as calling `SET <key> 1`.
 
 Another way to look at it is that we're building a hash map accessible over TCP.
 
 Oh, and, finally, the last constraint, we're only using the standard library, nothing external.
 
-## A Server that doesn't do much
+{{% note %}}
+I've never written Go code professionally, most of what you're seeing here is a lot of trial and error combined with finding code on the Internet.
+{{% /note %}}
+
+## The TCP part
 
 We're going to build our server step by step, let's start with the "TCP server" part.
 
@@ -97,7 +96,35 @@ func main() {
 
 We can run this server with `go run server.go 3000` (or any other available port), and connect to it from another terminal with `nc -v localhost 3000`.
 
-In the `main` function we start by getting the port number from the command arguments, and we then use it to start a local server listening to that port over tcp. We then start an infinite loop where we call the [blocking function `Accept`][accept-function], and for every client it returns, we run the `handleConnection` function in its own goroutine.
+### Reading command arguments
+
+In the `main` function we start by getting the port number from the command arguments:
+
+```go
+func main() {
+	arguments := os.Args
+	if len(arguments) == 1 {
+		fmt.Println("Please provide a port number!")
+		return
+	}
+	// ...
+```
+
+We then use it to start a local server listening to that port over tcp:
+
+```go
+	port := ":" + arguments[1]
+	server, err := net.Listen("tcp4", port)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer server.Close()
+```
+
+
+
+We then start an infinite loop where we call the [blocking function `Accept`][accept-function], and for every client it returns, we run the `handleConnection` function in its own goroutine.
 
 The built-in goroutine mechanism gives us a lot to achieve the concurrency goal stated earlier. The main goroutine is purposefully stuck in an infinite loop, in order to handle any number of clients, it waits for the next client to connect and when it does, gives it its own goroutine, where it is handled without interfering with the main goroutine where new clients may or may not connect later on.
 
