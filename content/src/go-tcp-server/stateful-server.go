@@ -9,9 +9,6 @@ import (
 	"strings"
 )
 
-const MIN = 1
-const MAX = 100
-
 func handleConnection(db map[string]string, client net.Conn) {
 	defer client.Close()
 

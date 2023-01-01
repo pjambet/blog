@@ -9,6 +9,8 @@ import (
 )
 
 func handleConnection(client net.Conn) {
+	defer client.Close()
+
 	fmt.Printf("Serving %s\n", client.RemoteAddr().String())
 
 	for {
@@ -22,9 +24,6 @@ func handleConnection(client net.Conn) {
 		fmt.Println("Received:", temp)
 		client.Write([]byte(temp + "\n"))
 	}
-
-	fmt.Println("Closing client")
-	client.Close()
 }
 
 func main() {
