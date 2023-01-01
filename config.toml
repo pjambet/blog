@@ -15,9 +15,9 @@ disqusShortname = "blog-1h4ea8llx6"
     lineNoStart = 1
     lineNos = false
     lineNumbersInTable = true
-    noClasses = true
-    style = "friendly"
-    tabWidth = 4
+    noClasses = false
+    style = "monokai"
+    tabWidth = 4 # Apparently ignored with noClasses=false
 
 [Params]
 #  homeTitle = "Beautiful Hugo Theme" # Set a different text for the header on the home page

@@ -58,3 +58,7 @@ article>h5 {
     overflow-wrap: break-word;
   }
 }
+
+.highlight pre code {
+  tab-size: 4;
+}
