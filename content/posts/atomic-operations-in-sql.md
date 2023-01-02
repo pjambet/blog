@@ -8,7 +8,10 @@ layout: post
 highlight: false
 draft: false
 description: "SQL supports atomic increment and decrement operations on numeric columns. The “trick” is to use an update query following a specific pattern using a relative right hand side value."
+image: /images/atomic.jpg
 ---
+
+![A zipper with red & blue sides](/images/atomic.jpg)
 
 ##### Previously published on [Medium](https://medium.com/harrys-engineering/atomic-increment-decrement-operations-in-sql-and-fun-with-locks-f7b124d37873)
 
