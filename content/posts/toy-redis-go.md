@@ -283,7 +283,7 @@ func handleConnection(db map[string]string, client net.Conn) {
 }
 ```
 
-For each branch of the `switch` statement we implement the command-specific behavior theough [the various operations][map-docs] available for the map type.
+For each branch of the `switch` statement we implement the command-specific behavior through [the various operations][map-docs] available for the map type.
 
 
 ### GET
