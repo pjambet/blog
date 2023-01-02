@@ -11,7 +11,7 @@ summary: "A toy Redis server in Go, responding to a small subset of commands."
 image: /images/go-parallel.jpg
 ---
 
-![Train tracks](/images/go-parallel.jpg)
+![A zipper with red & blue sides](/images/go-parallel.jpg)
 
 ## What we're building
 
