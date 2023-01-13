@@ -30,7 +30,7 @@ There are two important elements in this query:
 - The WHERE clause has to be deterministic (more on that later).
 - The right hand side of the update statement is using the relative value instead of passing an absolute, preselected value (also more on that later).
 
-The PostgreSQL documentation has a good example.
+The [PostgreSQL documentation](https://www.postgresql.org/docs/9.6/static/transaction-iso.html#XACT-READ-COMMITTED) has a good example.
 
 ## Deadlock risk
 
