@@ -25,9 +25,9 @@ I've never written Clojure code professionally, what you're about to read is the
 
 TODO: Write me
 
-## Starting small, a TCP server
+## Starting small, a TCP server and nothing else
 
-One great thing with Clojure is that you get get access to everything that Java offers. So when it comes to starting a TCP server, we can use Java's [`ServerSocket` class][java-server-socket], instantiate it with the port number it should listen to, and use its [`accept` method][java-server-socket-accept] to accept new clients. We get back a `Socket` instance, which we can conveniently use [`clojure.java.io/writer`][clj-java-writer] with, to get back an instance of `java.io.BufferedWriter`. With that writer instance, we can now write to the socket, and we need to call `flush`, to make sure the data gets written, and can be read on the other end.
+One of the great things with Clojure is that you get access to everything that Java offers. So when it comes to starting a TCP server, we can use Java's [`ServerSocket` class][java-server-socket], instantiate it with the port number it should listen to, and use its [`accept` method][java-server-socket-accept] to accept new clients. We get back a `Socket` instance, which we can conveniently use [`clojure.java.io/writer`][clj-java-writer] with, to get back an instance of `java.io.BufferedWriter`. With that writer instance, we can now write to the socket, and we need to call `flush`, to make sure the data gets written, and can be read on the other end.
 
 ```clj
 (ns tcp
@@ -57,7 +57,15 @@ You can run the program with `clj -M tcp.clj` and connect to it with `nc -v loca
 
 ## Making the server do things
 
-In this section, we'll keep the connection open,
+In this section, we'll keep the connections open, wait for the clients to send _something_ over the wire, and respond back. We will use Clojure's `core/async` library to help with concurrency, for the main reason that I couldn't think of any other solutions to do so.
+
+`core/async` [shares a lot with Go's concurrency mechanisms][clj-and-go-sitting-in-a-tree] with couroutines, so if you read the previous entry in this series, this should all look pretty familiar.
+
+{{% note %}}
+
+If you're thinking "well, since we can use anything that exists in Java, we could use Java's non blocking IO library, java.nio, it's been available since Java 7". Well, you're probably right, I'm sure we _could_, but I will actually dedicate a whole article to that topic, about building a Toy Redis, in Java, using the nio package!
+
+{{% /note %}}
 
 [clj-java-writer]:https://clojuredocs.org/clojure.java.io/writer
 [2]:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Writer.html#close()
@@ -66,3 +74,4 @@ In this section, we'll keep the connection open,
 [5]:https://docs.oracle.com/javase/7/docs/api/java/io/BufferedWriter.html
 [java-server-socket-accept]:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/ServerSocket.html#accept()
 [java-server-socket]:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/ServerSocket.html#%3Cinit%3E(int)
+[clj-and-go-sitting-in-a-tree]:https://clojure.org/news/2013/06/28/clojure-clore-async-channels#_history

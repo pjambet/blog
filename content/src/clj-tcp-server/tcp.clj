@@ -9,7 +9,6 @@
     (.flush writer)
     (.close client)))
 
-
 (defn main
   []
   (with-open [server-socket (ServerSocket. 3000)]
