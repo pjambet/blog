@@ -61,7 +61,7 @@ You can run the program with `clj -M tcp.clj` and connect to it with `nc -v loca
 
 ## Keeping the connections open
 
-Let's now make the server keep the connections open, wait for the clients to send _something_ over the wire, and respond back. We will use Clojure's `core/async` library to help with concurrency, for the main reason that I couldn't think of any other solutions to do so.
+Let's now make the server keep the connections open, wait for the clients to send _something_ over the wire, and respond back. We will use Clojure's `core/async` library to help with concurrency, for the main reason that I couldn't think of any other solutions.
 
 `core/async` [shares a lot with Go's concurrency mechanisms][clj-and-go-sitting-in-a-tree] with couroutines, so if you read the previous entry in this series, this should all look pretty familiar.
 
@@ -73,12 +73,13 @@ If you're thinking "well, since we can use anything that exists in Java, we coul
 
 Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, Go Blocks. If you've read the previous post, or are familiar with Go, this is very similar to coroutines created with the `go` keyword.
 
-`core.async` provides the `go` macro, it executes the body it's given asynchronously. The following example starts a go block, prints immediately the first statement from the block, and then the one from the main thread, then sleeps for 5s and finally prints done:
+`core.async` provides the `go` macro, it asynchronously executes the body we give it. The following example starts a go block, prints immediately the first statement from the block, and then the one from the main thread, then sleeps for 5s and finally prints done:
 
 ```clj
+(def sleep-time 5000)
 (a/go
-  (println (str "sleeping for " 5000 "ms"))
-  (Thread/sleep 5000)
+  (println (str "sleeping for " sleep-time "ms"))
+  (Thread/sleep sleep-time)
   (println "done!"))
 (println "Printing from main thread")
 ```
@@ -87,12 +88,20 @@ You can run start from the REPL with `clj -Sdeps '{:deps {org.clojure/core.async
 
 ```
 Clojure 1.11.1
-user=>(require '[clojure.core.async :as a])
+user=> (require '[clojure.core.async :as a])
 nil
-user=>(a/go (println (str "sleeping for " 5000 "ms")) (Thread/sleep 5000) (println "done!"))
-#object[clojure.core.async.impl.channels.ManyToManyChannel 0x1b3a1e42 "clojure.core.async.impl.channels.ManyToManyChannel@1b3a1e42"]
-user=> sleeping for 5000ms
-done!
+user=> (def sleep-time 5000)
+#'user/sleep-time
+user=> (a/go
+  (println (str "sleeping for " sleep-time "ms"))
+  (Thread/sleep sleep-time)
+  (println "done!"))
+(println "Printing from main thread")
+#object[clojure.core.async.impl.channels.ManyToManyChannel 0x2b3ac26d "clojure.core.async.impl.channels.ManyToManyChannel@2b3ac26d"]
+sleeping for 5000ms
+user=> Printing from main thread
+nil
+user=> done!
 ```
 
 We can now start a new go block for each new client, but first, let's require it:
@@ -156,6 +165,116 @@ The following is the full version of `handle-client`:
             (.flush writer)
             (recur)))))))
 ```
+
+### Making the server stateful
+
+The last step is to turn this whole thing stateful. We want the server to store data, so that other clients can read from it.
+
+Clojure's collections are immutable, so we have less options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the main function and passed it to each coroutine, something like this:
+
+```clj
+(defn main
+  []
+  (with-open [server-socket (ServerSocket. 3000)]
+    (loop []
+      (let [client-socket (.accept server-socket)
+            db (hash-map)]
+        (handle-client client-socket db)
+        (recur)))))
+```
+
+But then `handle-client` can't modify `db` in a way that would be seen by other go blocks. We can for instance add new entries to it:
+
+```clj
+(defn handle-client
+  [client original-db]
+  (a/go
+    (loop [db original-db]
+      (let [request (.readLine (io/reader client))
+            writer (io/writer client)]
+        (if (nil? request)
+          (do
+            (println "Nil response, closing client")
+            (.close client))
+          (let [updated-db (assoc db (System/currentTimeMillis) request)]
+            (.write writer "Hello 👋\n")
+            (.flush writer)
+            (recur updated-db)))))))
+```
+
+In this example we write the most recent string received from the client, where the key is the current timestamp. Yes, this is a very contrived example, the only purpose is to show that we have no easy way to make the updates made to the map visible to the outside. The `handle-client` function returns a channel, which we ignore, because we don't need it.
+
+The answer to this problem is once again very similar to the Go chapter, Channels!
+
+We'll create one channel in the main function, for all the go blocks to send the requests received from clients to a go block that will handle storing the data and send it back over a different channel, so that a response can be written back to the client. Let's see what it looks like, first the main function:
+
+```clj
+(defn main
+  []
+  (let [command-channel (a/chan)]
+    (with-open [server-socket (ServerSocket. 3000)]
+      (handle-db command-channel)
+      (loop []
+        (let [client-socket (.accept server-socket)]
+          (handle-client client-socket command-channel)
+          (recur))))))
+```
+
+You may have noticed that on top of passing `command-channel` to each call of `handle-client`, we also pass it to `handle-db`, before starting the loop. Let's take a look at that function:
+
+```clj
+(defn handle-db
+  [command-channel]
+  (a/go
+    (loop [db (hash-map)]
+      (let [resp (a/<! command-channel)
+            timestamp (System/currentTimeMillis)
+            updated-db (assoc db (.hashCode (:client resp)) timestamp)]
+        (a/>! (:channel resp) timestamp)
+        (recur updated-db)))))
+```
+
+The function runs entirely in a go block, and starts an infinite loop with a `hash-map`. The first thing it does is wait for a message to be sent to the channel it was passed as an argument. When it receives a message, it stores the current timestamp associated with the client that sent the message. It effectively stores the timestamp of the last time it processed a message sent by a client.
+
+Then, it extract the `:channel` field from the message, and write the timestamp back to it. Finally, it calls `recur` with the updated `hash-map`, so that the next iteration sees the changes made to it.
+
+Now, let's look at `handle-client`, how it sends messages to `command-channel`, and how it reads back wht `handle-db` sends back after receiving the message:
+
+```clj
+(defn handle-client
+  [client channel]
+  (a/go
+    (loop []
+      (let [request (.readLine (io/reader client))
+            writer (io/writer client)
+            message {:channel (a/chan) :client client}] ;; (1)
+        (if (nil? request)
+          (do (println "Nil response, closing client")
+              (.close client))
+          (do (a/>! channel message) ;; (2)
+              (let [result (a/<! (:channel message))] ;; (3)
+                (.write writer (str "OK, " result "\n"))
+                (.flush writer)
+                (recur))))))))
+```
+
+Let's look at the three main changes:
+
+- In `(1)`, we create a `hash-map`, called `message`, with two keys, `:channel` is a newly built channel, so that `handle-db` can send back a message to us.
+- In `(2)`, when we have a non-nil message, we send `message` to the the channel created in the `main` function.
+- In `(3)`, we wait to get a response back from the `:channel` field of the message `hash-map`, and store the result in the `result` variable. We then write back the content to the client, sending them the timestamp stored in the internal db.
+
+This is another contrived example, storing the last timestamp of when we received _something_ from a client is not that useful. But we can use this archiecture to build our Toy Redis!
+
+## Putting everything together.
+
+We want to support the following commands:
+
+- 1
+- 2
+- 3
+- ...
+
 
 ## Conclusion
 
