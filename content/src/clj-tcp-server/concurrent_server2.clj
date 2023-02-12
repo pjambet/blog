@@ -1,10 +1,10 @@
-(ns concurrent-server
+(ns concurrent-server2
   (:require [clojure.java.io :as io]
             [clojure.core.async :as a])
   (:import (java.net ServerSocket)))
 
 (defn handle-client
-  [client]
+  [client db]
   (a/go
     (loop []
       (let [request (.readLine (io/reader client))
@@ -23,8 +23,10 @@
   []
   (with-open [server-socket (ServerSocket. 3000)]
     (loop []
-      (let [client-socket (.accept server-socket)]
-        (handle-client client-socket))
-      (recur))))
+      (let [client-socket (.accept server-socket)
+            db (hash-map)]
+        (let [c (handle-client client-socket db)]
+          (println c))
+        (recur)))))
 
 (main)
