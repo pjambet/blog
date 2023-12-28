@@ -3,3 +3,6 @@ resources
 public/**
 .hugo_build.lock
 content/posts/data-structures-abstraction-time-complexity-and-speed/node_modules/
+.lsp
+.calva
+.clj-kondo
