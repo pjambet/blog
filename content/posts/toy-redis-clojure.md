@@ -15,7 +15,7 @@ image: /images/clj-river.jpg
 
 _This is the second entry in the "Building Toy Redises in X" series". In [the first article](/posts/toy-redis-go/) we used Go, in this one we'll use Clojure._
 
-_The approach used in this article is very similar to the one used in Go, with the use of Channels, so reading it first might help._
+_One of the approaches explored in this article is very similar to the one used in Go, with the use of Channels, so reading it first might help._
 
 {{% note %}}
 I've never written Clojure code professionally, what you're about to read is the result of a slow and painful process of trial and error. Take everything with a grain of salt. And if you are an experienced Clojure developer and spot something outrageous, please reach out!
@@ -145,7 +145,7 @@ There is an issue however, if the client disconnects before the server is stoppe
 Exception in thread "async-dispatch-1" java.net.SocketException: Broken pipe
 ```
 
-I didn't include the full stacktrace, but if you were to look at it, despite it being kinda cryptic, we can see that the error occurs when we attempt to write to the socket. We can detect this by checking if the result of `readLine` is `nil`, in which case, we can close the connection on the server's end, since the client is gone.
+I didn't include the full stacktrace, but if you were to look at it, despite it being kinda cryptic, we can see that the error occurs when we attempt to write to the socket. We can prevent this by checking if the result of `.readLine` is `nil`, in which case, we can close the connection on the server's end, since the client is gone.
 
 The following is the full version of `handle-client`:
 
@@ -166,11 +166,11 @@ The following is the full version of `handle-client`:
             (recur)))))))
 ```
 
-### Making the server stateful
+## Making the server stateful
 
 The last step is to turn this whole thing stateful. We want the server to store data, so that other clients can read from it.
 
-Clojure's collections are immutable, so we have less options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the main function and passed it to each coroutine, something like this:
+Clojure's collections are immutable, so we don't have that many options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the main function and passed it to each coroutine, something like this:
 
 ```clj
 (defn main
@@ -196,15 +196,22 @@ But then `handle-client` can't modify `db` in a way that would be seen by other 
           (do
             (println "Nil response, closing client")
             (.close client))
-          (let [updated-db (assoc db (System/currentTimeMillis) request)]
+          (let [updated-db (assoc db (.hashCode client) (System/currentTimeMillis))]
             (.write writer "Hello 👋\n")
             (.flush writer)
             (recur updated-db)))))))
 ```
 
-In this example we write the most recent string received from the client, where the key is the current timestamp. Yes, this is a very contrived example, the only purpose is to show that we have no easy way to make the updates made to the map visible to the outside. The `handle-client` function returns a channel, which we ignore, because we don't need it.
+In this example we store the timestamp of the most recent line we received from the client, where the key is the `.hashCode` value of the client. Yes, this is a very contrived example, the only purpose is to show that we have no easy way to make the updates made to the map visible to the outside. The `handle-client` function returns a channel, which we ignore, because we don't need it. Because we execute a go block, we cannot return data to the caller.
 
-The answer to this problem is once again very similar to the Go chapter, Channels!
+We will explore two approaches to address this issue:
+
+- One very similar to the Go chapter, Channels!
+- [Atoms](https://clojure.org/reference/atoms), clojure's builtin "[...] way to manage shared, synchronous, independent state"
+
+### Channels
+
+Let's start with the channel version, and we'll look at atoms next.
 
 We'll create one channel in the main function, for all the go blocks to send the requests received from clients to a go block that will handle storing the data and send it back over a different channel, so that a response can be written back to the client. Let's see what it looks like, first the main function:
 
@@ -234,11 +241,11 @@ You may have noticed that on top of passing `command-channel` to each call of `h
         (recur updated-db)))))
 ```
 
-The function runs entirely in a go block, and starts an infinite loop with a `hash-map`. The first thing it does is wait for a message to be sent to the channel it was passed as an argument. When it receives a message, it stores the current timestamp associated with the client that sent the message. It effectively stores the timestamp of the last time it processed a message sent by a client.
+The function runs entirely in a go block, and starts an infinite loop with a `hash-map`. The first thing it does is wait for a message to be sent to the channel it was given as an argument. When it receives a message, it stores the current timestamp associated with the client that sent the message. It effectively stores the timestamp of the last time it processed a message sent by a client.
 
-Then, it extract the `:channel` field from the message, and write the timestamp back to it. Finally, it calls `recur` with the updated `hash-map`, so that the next iteration sees the changes made to it.
+Then, it extracts the `:channel` field from the message, and write the timestamp back to it. Finally, it calls `recur` with the updated `hash-map`, so that the next iteration sees the changes made to it.
 
-Now, let's look at `handle-client`, how it sends messages to `command-channel`, and how it reads back wht `handle-db` sends back after receiving the message:
+Now, let's look at `handle-client`, how it sends messages to `command-channel`, and how it reads back what `handle-db` sends back after receiving the message:
 
 ```clj
 (defn handle-client
@@ -266,6 +273,7 @@ Let's look at the three main changes:
 
 This is another contrived example, storing the last timestamp of when we received _something_ from a client is not that useful. But we can use this archiecture to build our Toy Redis!
 
+
 ## Putting everything together.
 
 We want to support the following commands:
@@ -275,6 +283,37 @@ We want to support the following commands:
 - 3
 - ...
 
+
+## Atoms
+
+TODO: Write me ...
+
+To work with atoms, you first create one, with the `atom` function:
+
+```clj
+(def database (atom (hash-map)))
+```
+
+You can then dereference it to get its content:
+
+```clj
+@database ;; {}
+```
+
+And update them with `swap!`, to which you pass the atom and a function to update its state:
+
+```clj
+(swap! database
+       (fn [current-state]
+         (assoc current-state "abc" "123")))
+;; {"abc" "123"}
+```
+
+And we can confirm that the state was updated:
+
+```clj
+@database ;; {"abc" "123"}
+```
 
 ## Conclusion
 
