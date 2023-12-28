@@ -6,17 +6,21 @@
   (:gen-class))
 
 (defn key-request
-  [type key channel]
-  {:type type :key key :resp channel})
+  "Helper to structure the basic parts of a command"
+  [command key channel]
+  {:command command :key key :resp channel})
 
 (defn key-value-request
-  [type key value channel]
-  (assoc (key-request type key channel) :value value))
+  "Helper to structure the various parts of a SET command"
+  [command key value channel]
+  (assoc (key-request command key channel) :value value))
 
 (def valid-commands
-  #{"GET" "SET" "INCR" "DEL"})
+  "Valid commands"
+  #{"GET" "SET" "DEL" "INCR"})
 
 (defn request-for-command
+  "Return a structured representation of a client command"
   [command parts resp-channel]
   (cond
     (= command "GET")
@@ -28,10 +32,9 @@
     (= command "DEL")
     (key-request :del (get parts 1) resp-channel)))
 
-
 (defn handle-client
-  " write me ..."
-  [channel client-socket]
+  "Read from a connected client, and handles the various commands accepted by the server"
+  [client-socket command-channel]
   (a/go (loop [resp-channel (a/chan)]
           (let [request (.readLine (io/reader client-socket))
                 writer (io/writer client-socket)]
@@ -44,13 +47,12 @@
                     command (get parts 0)]
                 (cond
                   (contains? valid-commands command)
-                  (let [response (request-for-command command parts resp-channel)]
-                    (when response
-                      (a/>! channel response)
-                      (let [value (a/<! resp-channel)]
-                        (.write writer (str value "\n"))
-                        (.flush writer)
-                        (recur resp-channel))))
+                  (let [request (request-for-command command parts resp-channel)]
+                    (a/>! command-channel request)
+                    (let [value (a/<! resp-channel)]
+                      (.write writer (str value "\n"))
+                      (.flush writer)
+                      (recur resp-channel)))
                   (= command "QUIT")
                   (do
                     (a/close! resp-channel)
@@ -60,13 +62,15 @@
                           (recur resp-channel)))))))))
 
 (defn atoi
+  "Attempt to convert a string to integer, returns nil if it can't be parsed"
   [string]
   (try
-    (Integer. string)
+    (Integer/valueOf string)
     (catch NumberFormatException _e
       nil)))
 
-(defn update-db
+(defn process-command
+  "Perform various operations depending on the command sent by the client"
   [db command key value]
   (cond
     (= command :get)
@@ -87,38 +91,42 @@
     (= command :incr)
     (if key
       (if (contains? db key)
-        (let [number (atoi (get db key))]
-          (if number
-            {:updated (assoc db key (str (+ number 1))) :response (str (+ number 1))}
+        (let [current-number (atoi (get db key))
+              new-number (when current-number (str (+ current-number 1)))]
+          (if current-number
+            {:updated (assoc db key new-number) :response new-number}
             {:updated db :response "ERR value is not an integer or out of range"}))
         {:updated (assoc db key "1") :response "1"})
       {:updated db :response "ERR wrong number of arguments for 'incr' command"})
     :else {:updated db :response "Unknown command"}))
 
 (defn handle-db
+  "Run a go block in which we continuously wait for clients to send commands,
+   process them, and send back a response through teh channel included in the
+   received hash map"
   [command-channel]
   (a/go (loop [db (hash-map)]
-          (let [response (a/<! command-channel)
-                type (response :type)
-                key (response :key)
-                value (response :value)
-                chan-resp (response :resp)
-                result (update-db db type key value)
+          (let [request (a/<! command-channel)
+                command (request :command)
+                key (request :key)
+                value (request :value)
+                chan-resp (request :resp)
+                result (process-command db command key value)
                 new-db (result :updated)
                 response (result :response)]
             (a/>! chan-resp response)
             (recur new-db)))))
 
 (defn main
-  "I don't do a whole lot ... yet."
-  [& _args]
+  "Start a server and continuously wait for new clients to connect"
+  []
   (println "About to start ...")
   (let [command-channel (a/chan)]
     (handle-db command-channel)
     (with-open [server-socket (ServerSocket. 3000)]
       (loop []
         (let [client-socket (.accept server-socket)]
-          (handle-client command-channel client-socket))
+          (handle-client client-socket command-channel))
         (recur)))))
 
 (main)
