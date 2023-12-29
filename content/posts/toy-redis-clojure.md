@@ -1,13 +1,12 @@
 ---
 title: "A toy Redis Server, in Clojure"
-date: 2023-02-06T21:59:55-06:00
-lastmod: 2023-02-06T21:59:55-06:00
+date: 2023-12-29T18:36:30-05:00
+lastmod: 2023-12-29T18:36:30-05:00
 tags : [ "dev", "go", "tcp servers" ]
 categories : [ "dev" ]
 summary: "A toy Redis server in Clojure, responding to a small subset of commands."
 layout: post
 highlight: false
-draft: true
 image: /images/clj-river.jpg
 ---
 
