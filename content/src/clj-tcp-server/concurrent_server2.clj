@@ -24,7 +24,7 @@
   (with-open [server-socket (ServerSocket. 3000)]
     (loop []
       (let [client-socket (.accept server-socket)
-            db (hash-map)]
+            db {}]
         (handle-client client-socket db)
         (recur)))))
 

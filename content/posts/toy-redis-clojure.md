@@ -72,9 +72,9 @@ If you're thinking "well, since we can use anything that exists in Java, we coul
 
 {{% /note %}}
 
-Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, Go Blocks. If you've read the previous post, or are familiar with Go, this is very similar to coroutines created with the `go` keyword.
+Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, `go`` Blocks. If you've read the previous post, or are familiar with Go, this is very similar to coroutines created with the `go` keyword.
 
-`core.async` provides the `go` macro, it asynchronously executes the body we give it. The following example starts a go block, prints immediately the first statement from the block, and then the one from the main thread, then sleeps for 5s and finally prints done:
+`core.async` provides the `go` macro, it asynchronously executes the body we give it. The following example starts a `go` block, prints immediately the first statement from the block, and then the one from the main thread, then sleeps for 5s and finally prints done:
 
 ```clj
 (def sleep-time 5000)
@@ -85,7 +85,7 @@ Clojure lets us spin up new threads, which we could use to handle concurrent cli
 (println "Printing from main thread")
 ```
 
-You can run start from the REPL with `clj -Sdeps '{:deps {org.clojure/core.async {:mvn/version "1.6.681"}}}` and then with:
+You can run start from the REPL with `clj -Sdeps '{:deps {org.clojure/core.async {:mvn/version "1.6.681"}}}'` and then with:
 
 ```
 Clojure 1.11.1
@@ -105,7 +105,7 @@ nil
 user=> done!
 ```
 
-We can now start a new go block for each new client, but first, let's require it:
+We can now start a new go block for each new client, but first, let's require `core.async`:
 
 ```clj
 (ns concurrent-server
@@ -115,7 +115,7 @@ We can now start a new go block for each new client, but first, let's require it
 ;; ...
 ```
 
-And we can now us `a/go`:
+And we can now use `a/go`:
 
 ```clj
 (defn handle-client
@@ -171,7 +171,7 @@ The following is the full version of `handle-client`:
 
 The last step is to turn this whole thing stateful. We want the server to store data, so that other clients can read from it.
 
-Clojure's collections are immutable, so we don't have that many options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the main function and passed it to each coroutine, something like this:
+Clojure's collections are immutable, so we don't have that many options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the `main` function and passed it to each coroutine, something like this:
 
 ```clj
 (defn main
@@ -179,7 +179,7 @@ Clojure's collections are immutable, so we don't have that many options for our 
   (with-open [server-socket (ServerSocket. 3000)]
     (loop []
       (let [client-socket (.accept server-socket)
-            db (hash-map)]
+            db {}]
         (handle-client client-socket db)
         (recur)))))
 ```
@@ -234,7 +234,7 @@ You may have noticed that on top of passing `command-channel` to each call of `h
 (defn handle-db
   [command-channel]
   (a/go
-    (loop [db (hash-map)]
+    (loop [db {}]
       (let [resp (a/<! command-channel)
             timestamp (System/currentTimeMillis)
             updated-db (assoc db (.hashCode (:client resp)) timestamp)]
@@ -242,9 +242,9 @@ You may have noticed that on top of passing `command-channel` to each call of `h
         (recur updated-db)))))
 ```
 
-The function runs entirely in a go block, and starts an infinite loop with a `hash-map`. The first thing it does is wait for a message to be sent to the channel it was given as an argument. When it receives a message, it stores the current timestamp associated with the client that sent the message. It effectively stores the timestamp of the last time it processed a message sent by a client.
+The function runs entirely in a go block, and starts an infinite loop with a hash map. The first thing it does is wait for a message to be sent to the channel it was given as an argument. When it receives a message, it stores the current timestamp associated with the client that sent the message. It effectively stores the timestamp of the last time it processed a message sent by a client.
 
-Then, it extracts the `:channel` field from the message, and write the timestamp back to it. Finally, it calls `recur` with the updated `hash-map`, so that the next iteration sees the changes made to it.
+Then, it extracts the `:channel` field from the message, and write the timestamp back to it. Finally, it calls `recur` with the updated hash map, so that the next iteration sees the changes made to it.
 
 Now, let's look at `handle-client`, how it sends messages to `command-channel`, and how it reads back what `handle-db` sends back after receiving the message:
 
@@ -268,9 +268,9 @@ Now, let's look at `handle-client`, how it sends messages to `command-channel`, 
 
 Let's look at the three main changes:
 
-- In `(1)`, we create a `hash-map`, called `message`, with two keys, `:channel` is a newly built channel, so that `handle-db` can send back a message to us.
+- In `(1)`, we create a hash map, called `message`, with two keys, `:channel` is a newly built channel, so that `handle-db` can send back a message to us.
 - In `(2)`, when we have a non-nil message, we send `message` to the the channel created in the `main` function.
-- In `(3)`, we wait to get a response back from the `:channel` field of the message `hash-map`, and store the result in the `result` variable. We then write back the content to the client, sending them the timestamp stored in the internal db.
+- In `(3)`, we wait to get a response back from the `:channel` field of the message hash map, and store the result in the `result` variable. We then write back the content to the client, sending them the timestamp stored in the internal db.
 
 This is another contrived example, storing the last timestamp of when we received _something_ from a client is not that useful. But we can use this architecture to build our Toy Redis!
 
@@ -326,7 +326,7 @@ We will however update the `handle-db` function to deal with the various command
 
 This is similar to what we looked at in the previous section, with more handling of the various elements of a command.
 
-We start the same way, by creating a `go` block, in which we continuously loop over the `hash-map` that will store all the server's data. What follows in the `let` call is a sequence of operations to process the command we received from the client through `command-channel`.
+We start the same way, by creating a `go` block, in which we continuously loop over the hash map that will store all the server's data. What follows in the `let` call is a sequence of operations to process the command we received from the client through `command-channel`.
 
 We pass the `command`, `key`, `value` & `chan-resp` variables to `process-command`, which we'll look at next, and we then extract two variables from whatever it returns, `new-db` & `response`. `new-db` is what we pass to `recur` to maintain the inner state of the database on the server. `response` is what we send back to the client through the `channel` that was included in the `request` hash map.
 
@@ -402,7 +402,7 @@ Next we use the `cond` function to first check if the `command` variable represe
 
 In case it is _not_ a valid command, we have two more options, either `command` is equal to `QUIT`, in which case we do the same as what we do with `nil` results from clients, we close everything and don't `recur`. Finally, if the command is unknown, we do nothing and call `recur` to listen to any future commands from the connected client.
 
-Back to the case where the command is a valid command, we use a helper function `request-for-command` to create the `hash-map` we will send to `command-channel`:
+Back to the case where the command is a valid command, we use a helper function `request-for-command` to create the hash map we will send to `command-channel`:
 
 ```clj
 (defn key-request
@@ -418,7 +418,7 @@ Back to the case where the command is a valid command, we use a helper function 
     (key-request :get (get parts 1) resp-channel)))
 ```
 
-This turns a string such as `GET a` into a `hash-map` that looks like the following:
+This turns a string such as `GET a` into a hash map that looks like the following:
 
 ```clj
 {:command :get :key "a" :resp {:ch #object["clojure..."]}}
@@ -438,7 +438,7 @@ The `SET` commands requires two arguments, a key and a value. Let's first update
   #{"GET" "SET"})
 ```
 
-Next we'll update the `request-for-command` function to return a `hash-map` with all the details that `handle-db` needs:
+Next we'll update the `request-for-command` function to return a hash map with all the details that `handle-db` needs:
 
 ```clj
 (defn key-value-request
@@ -456,7 +456,7 @@ Next we'll update the `request-for-command` function to return a `hash-map` with
     (key-value-request :set (get parts 1) (get parts 2) resp-channel)))
 ```
 
-Note that we added a new helper function, `key-value-request`, to help with the creation of the `hash-map` for `SET` commands where we need an additional argument for the value. The resulting `hash-map` looks something like:
+Note that we added a new helper function, `key-value-request`, to help with the creation of the hash map for `SET` commands where we need an additional argument for the value. The resulting hash map looks something like:
 
 ```clj
 {:command :set :key "a" :value "123" :resp {:ch #object["clojure..."]}}

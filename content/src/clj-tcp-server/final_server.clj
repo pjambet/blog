@@ -105,7 +105,7 @@
    process them, and send back a response through teh channel included in the
    received hash map"
   [command-channel]
-  (a/go (loop [db (hash-map)]
+  (a/go (loop [db {}]
           (let [request (a/<! command-channel)
                 command (request :command)
                 key (request :key)

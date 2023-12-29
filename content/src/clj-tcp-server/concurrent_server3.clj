@@ -22,7 +22,7 @@
 (defn handle-db
   [command-channel]
   (a/go
-    (loop [db (hash-map)]
+    (loop [db {}]
       (let [resp (a/<! command-channel)
             timestamp (System/currentTimeMillis)
             updated-db (assoc db (.hashCode (:client resp)) timestamp)]
