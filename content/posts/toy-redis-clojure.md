@@ -311,7 +311,7 @@ We will however update the `handle-db` function to deal with the various command
   process them, and send back a response through teh channel included in the
   received hash map"
   [command-channel]
-  (a/go (loop [db (hash-map)]
+  (a/go (loop [db {}]
           (let [response (a/<! command-channel)
                 command (response :command)
                 key (response :key)
@@ -605,7 +605,7 @@ Before we update our server to use atoms, let's first take a quick look at how t
 To work with atoms, you first create one, with the `atom` function:
 
 ```clj
-(def database (atom (hash-map)))
+(def database (atom {}))
 ```
 
 You can then dereference it to get its content:
