@@ -85,7 +85,7 @@ Clojure lets us spin up new threads, which we could use to handle concurrent cli
 (println "Printing from main thread")
 ```
 
-You can run start from the REPL with `clj -Sdeps '{:deps {org.clojure/core.async {:mvn/version "1.6.681"}}}'` and then with:
+You can run this example from the REPL with `clj -Sdeps '{:deps {org.clojure/core.async {:mvn/version "1.6.681"}}}'` and then with:
 
 ```
 Clojure 1.11.1
