@@ -72,7 +72,7 @@ If you're thinking "well, since we can use anything that exists in Java, we coul
 
 {{% /note %}}
 
-Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, `go`` Blocks. If you've read the previous post, or are familiar with Go, this is very similar to coroutines created with the `go` keyword.
+Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, `go` Blocks. If you've read the previous post, or are familiar with Go, this is very similar to coroutines created with the `go` keyword.
 
 `core.async` provides the `go` macro, it asynchronously executes the body we give it. The following example starts a `go` block, prints immediately the first statement from the block, and then the one from the main thread, then sleeps for 5s and finally prints done:
 
