@@ -481,7 +481,7 @@ After making these changes, we now need to update `process-command` so that the 
     :else {:updated db :response "Unknown command"}))
 ```
 
-Under the `(=command :set)` branch, we first make sure we have values for `key` & `value`, if we don't we return an error. If we do have values, we use the `assoc` function to set the value in the DB, no matter what it was before.
+Under the `(= command :set)` branch, we first make sure we have values for `key` & `value`, if we don't we return an error. If we do have values, we use the `assoc` function to set the value in the DB, no matter what it was before.
 
 Remember that because we return the result of `(assoc)` under the `:updated` field, the `handle-db` function will use that value in its `recur` call and effectively keep that value as the latest version of the DB.
 
