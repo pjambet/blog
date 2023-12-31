@@ -22,7 +22,7 @@ I've never written Clojure code professionally, what you're about to read is the
 
 ## What we're building
 
-We're building something very similar to what we built in the first article, you can check out the details [over there](/posts/toy-redis-go/#what-were-building) for more details
+We're building something very similar to what we built in the first article, you can check out the details [over there](/posts/toy-redis-go/#what-were-building) for more information.
 
 All the code in this post is in the `content/src/clj-tcp-server/` folder, available [on GitHub](https://github.com/pjambet/blog/tree/master/content/src/clj-tcp-server).
 
