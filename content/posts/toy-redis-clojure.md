@@ -629,7 +629,7 @@ And we can confirm that the state was updated:
 @database ;; {"abc" "123"}
 ```
 
-### Updating our servers
+### Updating our server
 
 The `main` function is now different since we don't need to create the `command-channel` variable:
 
