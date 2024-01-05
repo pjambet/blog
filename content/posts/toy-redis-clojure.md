@@ -64,7 +64,7 @@ You can run the program with `clj -M tcp.clj` and connect to it with `nc -v loca
 
 Let's now make the server keep the connections open, wait for the clients to send _something_ over the wire, and respond back. We will use Clojure's `core/async` library to help with concurrency, for the main reason that I couldn't think of any other solutions.
 
-`core/async` [shares a lot with Go's concurrency mechanisms][clj-and-go-sitting-in-a-tree] with coroutines, so if you read the previous entry in this series, this should all look pretty familiar.
+`core/async` [shares a lot with Go's concurrency mechanisms][clj-and-go-sitting-in-a-tree] with blocks, so if you read the previous entry in this series, this should all look pretty familiar.
 
 {{% note %}}
 
@@ -72,7 +72,7 @@ If you're thinking "well, since we can use anything that exists in Java, we coul
 
 {{% /note %}}
 
-Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, `go` Blocks. If you've read the previous post, or are familiar with Go, this is very similar to coroutines created with the `go` keyword.
+Clojure lets us spin up new threads, which we could use to handle concurrent clients, but instead we'll use a higher level abstraction, `go` blocks. If you've read the previous post, or are familiar with Go, this is very similar to goroutines created with the `go` keyword.
 
 `core.async` provides the `go` macro, it asynchronously executes the body we give it. The following example starts a `go` block, prints immediately the first statement from the block, and then the one from the main thread, then sleeps for 5s and finally prints done:
 
@@ -171,7 +171,7 @@ The following is the full version of `handle-client`:
 
 The last step is to turn this whole thing stateful. We want the server to store data, so that other clients can read from it.
 
-Clojure's collections are immutable, so we don't have that many options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the `main` function and passed it to each coroutine, something like this:
+Clojure's collections are immutable, so we don't have that many options for our go blocks to share the same data structure to read and write on. In the previous chapter we initially tried an approach where we created a map in the `main` function and passed it to each `go` block, something like this:
 
 ```clj
 (defn main
