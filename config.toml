@@ -5,40 +5,50 @@ title = "Occasionally consistent"
 theme = "beautifulhugo"
 metaDataFormat = "yaml"
 summaryLength = 20
-disqusShortname = "blog-1h4ea8llx6"
 
 [markup]
-  [markup.highlight]
-    codeFences = true
-    guessSyntax = true
-    hl_Lines = ""
-    lineNoStart = 1
-    lineNos = false
-    lineNumbersInTable = true
-    noClasses = false
-    style = "monokai"
-    tabWidth = 4 # Apparently ignored with noClasses=false
+[markup.highlight]
+codeFences = true
+guessSyntax = true
+hl_Lines = ""
+lineNoStart = 1
+lineNos = false
+lineNumbersInTable = true
+noClasses = false
+style = "monokai"
+tabWidth = 4              # Apparently ignored with noClasses=false
 
 [Params]
 #  homeTitle = "Beautiful Hugo Theme" # Set a different text for the header on the home page
-  subtitle = "My blog, about tech stuff.<br>I am writing a book about rewriting Redis, in Ruby, <a href=\"https://redis.pjam.me\">check it out!</a>."
-  mainSections = ["post","posts"]
-  logo = "img/avatar-icon.png" # Expecting square dimensions
-  favicon = "img/favicon.ico"
-  dateFormat = "January 2, 2006"
-  commit = false
-  rss = true
-  comments = true
-  readingTime = true
-  wordCount = true
-  # useHLJS = true
-  socialShare = true
-  delayDisqus = true
-  showRelatedPosts = true
-   hideAuthor = true
+subtitle = "My blog, about tech stuff.<br>I am writing a book about rewriting Redis, in Ruby, <a href=\"https://redis.pjam.me\">check it out!</a>."
+mainSections = ["post", "posts"]
+logo = "img/avatar-icon.png"                                                                                                                        # Expecting square dimensions
+favicon = "img/favicon.ico"
+dateFormat = "January 2, 2006"
+commit = false
+rss = true
+comments = true
+readingTime = true
+wordCount = true
+# useHLJS = true
+socialShare = true
+delayDisqus = true
+showRelatedPosts = true
+hideAuthor = true
 #  gcse = "012345678901234567890:abcdefghijk" # Get your code from google.com/cse. Make sure to go to "Look and Feel" and change Layout to "Full Width" and Theme to "Classic"
-  archivePaginate = 20
-  showArchiveCount = false
+archivePaginate = 20
+showArchiveCount = false
+disqusShortname = "blog-1h4ea8llx6"
+name = "Pierre J"
+website = "http://www.pjam.me"
+# email = "youremail@domain.com"
+github = "pjambet"
+# gitlab = "username"
+# bitbucket = "username"
+twitter = "pierre_jambet"
+# reddit = "username"
+# linkedin = "username"
+stackoverflow = "users/919641/pjam"
 
 #[[Params.bigimg]]
 #  src = "img/triangle.jpg"
@@ -52,27 +62,15 @@ disqusShortname = "blog-1h4ea8llx6"
 #  src = "img/hexagon.jpg"
 #  desc = "Hexagon"
 
-[Author]
-  name = "Pierre J"
-  website = "http://www.pjam.me"
-  # email = "youremail@domain.com"
-  github = "pjambet"
-  # gitlab = "username"
-  # bitbucket = "username"
-  twitter = "pierre_jambet"
-  # reddit = "username"
-  # linkedin = "username"
-  stackoverflow = "users/919641/pjam"
+[[menu.main]]
+name = "Blog"
+url = ""
+weight = 1
 
 [[menu.main]]
-    name = "Blog"
-    url = ""
-    weight = 1
-
-[[menu.main]]
-    name = "About"
-    url = "about"
-    weight = 3
+name = "About"
+url = "about"
+weight = 3
 
 # [[menu.main]]
 #     identifier = "samples"
@@ -98,13 +96,13 @@ disqusShortname = "blog-1h4ea8llx6"
 #     weight = 3
 
 [[menu.main]]
-    name = "Tags"
-    url = "tags"
-    weight = 3
+name = "Tags"
+url = "tags"
+weight = 3
 [[menu.main]]
-    name = "Archive"
-    url = "posts"
-    weight = 4
+name = "Archive"
+url = "posts"
+weight = 4
 
 [markup.goldmark.renderer]
-  unsafe= true
+unsafe = true

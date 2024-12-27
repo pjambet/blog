@@ -3,7 +3,7 @@ publish = "public"
 command = "hugo --gc --minify"
 
 [context.production.environment]
-HUGO_VERSION = "0.70.0"
+HUGO_VERSION = "v0.140.1"
 HUGO_ENV = "production"
 HUGO_ENABLEGITINFO = "true"
 
@@ -11,7 +11,7 @@ HUGO_ENABLEGITINFO = "true"
 command = "hugo --gc --minify --enableGitInfo"
 
 [context.split1.environment]
-HUGO_VERSION = "0.70.0"
+HUGO_VERSION = "v0.140.1"
 HUGO_ENV = "production"
 
 [context.deploy-preview]
@@ -19,44 +19,44 @@ command = "hugo --gc --minify --buildDrafts --buildFuture -b $DEPLOY_PRIME_URL"
 
 [context.deploy-preview.environment]
 HUGO_ENV = "staging"
-HUGO_VERSION = "0.70.0"
+HUGO_VERSION = "v0.140.1"
 
 [context.branch-deploy]
 command = "hugo --buildDrafts --gc --minify -b $DEPLOY_PRIME_URL"
 
 [context.branch-deploy.environment]
 HUGO_ENV = "staging"
-HUGO_VERSION = "0.70.0"
+HUGO_VERSION = "v0.140.1"
 
 [context.next.environment]
 HUGO_ENABLEGITINFO = "true"
 
 [[headers]]
-  for = "/gifs/*"
-  [headers.values]
-  cache-control = "public,max-age=604800"
+for = "/gifs/*"
+[headers.values]
+cache-control = "public,max-age=604800"
 
 [[headers]]
-  for = "/images/*"
-  [headers.values]
-  cache-control = "public,max-age=604800"
+for = "/images/*"
+[headers.values]
+cache-control = "public,max-age=604800"
 
 [[headers]]
-  for = "*.png"
-  [headers.values]
-  cache-control = "public,max-age=604800"
+for = "*.png"
+[headers.values]
+cache-control = "public,max-age=604800"
 
 [[headers]]
-  for = "*.ico"
-  [headers.values]
-  cache-control = "public,max-age=604800"
+for = "*.ico"
+[headers.values]
+cache-control = "public,max-age=604800"
 
 [[headers]]
-  for = "*.js"
-  [headers.values]
-  cache-control = "public,max-age=604800"
+for = "*.js"
+[headers.values]
+cache-control = "public,max-age=604800"
 
 [[headers]]
-  for = "*.css"
-  [headers.values]
-  cache-control = "public,max-age=604800"
+for = "*.css"
+[headers.values]
+cache-control = "public,max-age=604800"
