@@ -185,7 +185,7 @@ IO.console.raw do
     log_to_stderr("read: '#{content.ord}'")
     if content == 'Q'
       exit(0)
-    else
+    elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
       current_row = TEXT_CONTENT[y - 1]
       current_row.insert(x - 1, content) # Insert at -1 on an empty string is fine
       x += 1
@@ -232,7 +232,7 @@ class Editor
         log_to_stderr("read: '#{content.ord}'")
         if content == 'Q'
           exit(0)
-        else
+        elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
           current_row = @text_content[@y - 1]
           current_row.insert(@x - 1, content) # Insert at -1 on an empty string is fine
           @x += 1
@@ -304,7 +304,7 @@ end
 def process_keypress(content)
   if content == 'Q'
     exit(0)
-  else
+  elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
     current_row = @text_content[@y - 1]
     current_row.insert(@x - 1, content) # Insert at -1 on an empty string is fine
     @x += 1
@@ -320,7 +320,7 @@ def process_keypress(content)
     exit(0)
   elsif content.ord == BACKSPACE
     log_to_stderr("Backspace pressed")
-  else
+  elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
     current_row = @text_content[@y - 1]
     current_row.insert(@x - 1, content) # Insert at -1 on an empty string is fine
     @x += 1
@@ -352,7 +352,7 @@ def process_keypress(content)
       current_row.slice!(deletion_index)
       @x -= 1
     end
-  else
+  elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
     current_row.insert(@x - 1, content) # Insert at -1 on an empty string is fine
     @x += 1
   end
@@ -443,7 +443,7 @@ def process_keypress(content)
         end
       end
     end
-  else
+  elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
     if current_row.nil?
       current_row = String.new
       @text_content[@y - 1] = current_row
@@ -499,7 +499,7 @@ def process_keypress(content)
     @text_content.insert(new_line_index, carry)
     @x = 1
     @y += 1
-  else
+  elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
     if current_row.nil?
       current_row = String.new
       @text_content[@y - 1] = current_row
@@ -507,6 +507,30 @@ def process_keypress(content)
     current_row.insert(@x - 1, content) # Insert at -1 on an empty string is fine
     @x += 1
   end
+end
+```
+
+Finally, up until now we used `Q` as a way to exit the editor, because it was easy, but it is objectively a weird choice. Let's now allow users to type a capitalized Q and instead use the sequence Ctrl+Q to exit!
+
+```ruby
+CTRL_Q = 17
+# ...
+def process_keypress(content)
+  current_row = @text_content[@y - 1]
+
+  if content.ord == CTRL_Q
+    clear_screen
+    exit(0)
+  elsif # ...
+  end
+end
+# ...
+def clear_screen
+  clear = ([HOME] + @height.times.map do
+    "#{ CLEAR }\r\n"
+  end + [HOME]).join
+  log_to_stderr(clear.inspect)
+  STDOUT.write(clear)
 end
 ```
 
@@ -536,6 +560,7 @@ class Editor
   DOWN = "B"
   RIGHT = "C"
   LEFT = "D"
+  CTRL_Q = 17
 
   def initialize
     @text_content = [String.new]
@@ -598,7 +623,8 @@ class Editor
   def process_keypress(content)
     current_row = @text_content[@y - 1]
 
-    if content == 'Q'
+    if content.ord == CTRL_Q
+      clear_screen
       exit(0)
     elsif content.ord == BACKSPACE
       return if @x == 1 && @y == 1
@@ -693,7 +719,7 @@ class Editor
       @text_content.insert(new_line_index, carry)
       @x = 1
       @y += 1
-    else
+    elsif PRINTABLE_ASCII_RANGE.cover?(content.ord)
       if current_row.nil?
         current_row = String.new
         @text_content[@y - 1] = current_row
@@ -701,6 +727,14 @@ class Editor
       current_row.insert(@x - 1, content) # Insert at -1 on an empty string is fine
       @x += 1
     end
+  end
+
+  def clear_screen
+    clear = ([HOME] + @height.times.map do
+      "#{ CLEAR }\r\n"
+    end + [HOME]).join
+    log_to_stderr(clear.inspect)
+    STDOUT.write(clear)
   end
 end
 
