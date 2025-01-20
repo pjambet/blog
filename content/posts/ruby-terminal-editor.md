@@ -359,7 +359,7 @@ def process_keypress(content)
 end
 ```
 
-Let's now add handling for four arrow keys.
+Let's now add handling for the four arrow keys.
 
 As we discovered earlier, a single press on an arrow key sends three bytes to the program. For instance the left arrow sends the bytes `27`, `91` & `68`. `27` is a non-printable character, `27` is the byte for the character `[` and `68` the byte for the character `D`
 
@@ -454,9 +454,11 @@ def process_keypress(content)
 end
 ```
 
-Finally, let's add support for the enter key. According to the [ASCII table][ascii-table], the ordinal value for Enter is
+Finally, let's add support for the enter key. According to the [ASCII table][ascii-table], the ordinal value for Enter is 13.
 
 ```ruby
+ENTER = 13
+# ...
 def process_keypress(content)
   current_row = @text_content[@y - 1]
 
@@ -538,7 +540,7 @@ end
 
 ## Conclusion
 
-What we build is very simple, and only a subset of what kilo does, in future posts we'll add
+What we built is very simple, and only a subset of what kilo does, in future posts we'll add
 
 Putting it all together:
 
